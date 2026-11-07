@@ -551,10 +551,9 @@ function renderBooking(){
   document.querySelectorAll("#steps i").forEach((el,i)=>el.classList.toggle("on", i<=bk.step));
   const root = $("#bk");
   if(bk.step===0){
-    root.innerHTML = `<h3>1. Hva trenger du hjelp med?</h3><div class="opts">${CONFIG.services.map(s=>`
+    root.innerHTML = `${CONFIG.firstFree?`<div class="note green" style="font-size:1rem">🎁 <b>Første time er gratis</b> – uansett hvilken type du velger.<br><span style="font-size:.9rem">${esc(CONFIG.packageText)}</span></div>`:""}<h3>1. Hva trenger du hjelp med?</h3><div class="opts">${CONFIG.services.map(s=>`
       <button class="opt ${bk.service===s.id?"on":""}" data-s="${s.id}"><span style="font-size:1.6rem">${s.icon}</span>
       <span style="flex:1"><b>${esc(s.name)}</b> · ${esc(s.time)}<small>${esc(s.desc)}</small><span class="es">${esc(s.es)}</span></span><b class="price">${s.from?"fra ":""}${s.price} €</b></button>`).join("")}</div>
-      ${CONFIG.firstFree?`<div class="note green" style="margin-top:14px">🎁 <b>Første time er gratis</b> – uansett hvilken type du velger.<br>${esc(CONFIG.packageText)}</div>`:""}
       <div class="note blue" style="margin-top:14px">Elena gir veiledning om helsevesenet – ikke diagnose eller behandling.</div>
       <button class="btn primary block" id="next" ${bk.service?"":"disabled"}>Neste</button>`;
     root.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{bk.service=b.dataset.s; renderBooking();});
