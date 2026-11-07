@@ -256,11 +256,11 @@ const CONFIG = {
   firstFree: true,          // første time gratis
   daysAhead: 21,
   services: [
-    { id: "video", icon: "📹", es: "Videollamada", time: "30 min", price: 30,
+    { id: "video", icon: "📹", es: "Videollamada", time: "40 min", price: 30,
       name: { nb: "Videosamtale", en: "Video call" },
       desc: { nb: "Snakk med Elena om helsevesenet, papirer eller hvor du bør gå.",
               en: "Talk to Elena about the health system, paperwork or where to go." } },
-    { id: "chat", icon: "💬", es: "Consulta por chat", time: "15 min", price: 10, from: true,
+    { id: "chat", icon: "💬", es: "Consulta por chat", time: "15 min", price: 10,
       name: { nb: "Chat-konsultasjon", en: "Chat consultation" },
       desc: { nb: "Raske spørsmål på melding til avtalt tid.", en: "Quick questions by message at an agreed time." } },
     { id: "papir", icon: "📄", es: "Ayuda con trámites", time: "30 min", price: 45,
@@ -312,7 +312,7 @@ const T = {
     copied: "Kopiert! Lim inn i meldingen til Elena", copyFail: "Kunne ikke kopiere – merk teksten og kopier selv",
     bookTitle: "Bestill time",
     firstFreeLong: "<b>Første time er gratis</b> – uansett hvilken type du velger.",
-    step1: "1. Hva trenger du hjelp med?", from: "fra",
+    step1: "1. Hva trenger du hjelp med?", payVipps: "💳 Du kan betale med <b>Vipps</b>", from: "fra",
     noDiagnosis: "Elena gir veiledning om helsevesenet – ikke diagnose eller behandling.",
     next: "Neste", back: "Tilbake", step2: "2. Velg dag og tid", slotsLabel: "Ledige tider (spansk tid)", pickDay: "Velg en dag for å se tider.",
     step3: "3. Om deg", bName: "Navn", bContact: "Telefon eller e-post", bFirst: "Er dette første gang du bestiller time hos Elena?",
@@ -321,7 +321,7 @@ const T = {
     bOk: "Jeg forstår at dette ikke er for akutte tilfeller, og at Elena ikke stiller diagnoser.",
     summaryBtn: "Se oppsummering", fillIn: "Fyll inn navn og kontaktinfo", tickOk: "Kryss av for at du har forstått",
     step4: "4. Send forespørselen",
-    requestNote: "Timen er en <b>forespørsel</b> til Elena har bekreftet den. Du får svar på Instagram, og betaling avtales direkte med Elena.",
+    requestNote: "Timen er en <b>forespørsel</b> til Elena har bekreftet den. Du får svar på Instagram. Du kan betale med <b>Vipps</b> – Elena sender deg betalingsinfo når timen er bekreftet.",
     restart: "Start på nytt", freeFirst: "Gratis – første time", at: "kl.",
     msgBook: (o) => `Hei Elena! Jeg vil gjerne bestille time via appen.\n\nType: ${o.type}\nPris: ${o.price}\nØnsket tid: ${o.when}\nNavn: ${o.name}\nKontakt: ${o.contact}\nSpråk: ${o.lang}${o.note?`\nTema: ${o.note}`:""}`,
     days: ["søn","man","tir","ons","tor","fre","lør"],
@@ -358,7 +358,7 @@ const T = {
     copied: "Copied! Paste it into your message to Elena", copyFail: "Couldn't copy – select the text and copy it yourself",
     bookTitle: "Book an appointment",
     firstFreeLong: "<b>Your first session is free</b> – whichever type you choose.",
-    step1: "1. What do you need help with?", from: "from",
+    step1: "1. What do you need help with?", payVipps: "💳 You can pay with <b>Vipps</b>", from: "from",
     noDiagnosis: "Elena gives guidance about the health system – not diagnosis or treatment.",
     next: "Next", back: "Back", step2: "2. Choose day and time", slotsLabel: "Available times (Spanish time)", pickDay: "Choose a day to see times.",
     step3: "3. About you", bName: "Name", bContact: "Phone or email", bFirst: "Is this your first appointment with Elena?",
@@ -367,7 +367,7 @@ const T = {
     bOk: "I understand this is not for emergencies, and that Elena does not make diagnoses.",
     summaryBtn: "See summary", fillIn: "Please fill in your name and contact details", tickOk: "Please tick the box to confirm",
     step4: "4. Send your request",
-    requestNote: "This is a <b>request</b> until Elena confirms it. You'll get a reply on Instagram, and payment is arranged directly with Elena.",
+    requestNote: "This is a <b>request</b> until Elena confirms it. You'll get a reply on Instagram. You can pay with <b>Vipps</b> – Elena sends you the payment details once the appointment is confirmed.",
     restart: "Start again", freeFirst: "Free – first session", at: "at",
     msgBook: (o) => `Hi Elena! I'd like to book an appointment from the app.\n\nType: ${o.type}\nPrice: ${o.price}\nPreferred time: ${o.when}\nName: ${o.name}\nContact: ${o.contact}\nLanguage: ${o.lang}${o.note?`\nTopic: ${o.note}`:""}`,
     days: ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],
@@ -725,7 +725,8 @@ function renderBooking(){
     root.innerHTML = `${CONFIG.firstFree?`<div class="note green" style="font-size:1rem">🎁 ${t("firstFreeLong")}</div>`:""}<h3>${t("step1")}</h3><div class="opts">${CONFIG.services.map(s=>`
       <button class="opt ${bk.service===s.id?"on":""}" data-s="${s.id}"><span style="font-size:1.6rem">${s.icon}</span>
       <span style="flex:1"><b>${esc(L(s.name))}</b> · ${esc(s.time)}<small>${esc(L(s.desc))}</small>${s.details?`<ul class="det">${L(s.details).map(d=>`<li>${esc(d)}</li>`).join("")}</ul>`:""}${s.note?`<small><i>${esc(L(s.note))}</i></small>`:""}<span class="es">${esc(s.es)}</span></span><b class="price">${priceText(s)}</b></button>`).join("")}</div>
-      <div class="note blue" style="margin-top:14px">${t("noDiagnosis")}</div>
+      <div class="note" style="margin-top:14px;background:#FFF0F5">${t("payVipps")}</div>
+      <div class="note blue">${t("noDiagnosis")}</div>
       <button class="btn primary block" id="next" ${bk.service?"":"disabled"}>${t("next")}</button>`;
     root.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{bk.service=b.dataset.s; renderBooking();});
   }
