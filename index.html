@@ -266,6 +266,13 @@ const CONFIG = {
 /* ---------- INNHOLD: Instagram-innlegg ----------
    Legg til nye innlegg her med samme tekst som på Instagram. */
 const POSTS = [
+  { id:"overvintre-vaksine", cat:"Vaksine", title:"Overvintrer du i Spania? Influensavaksinen i Valencia-regionen", es:"Vacuna de la gripe en la Comunitat Valenciana",
+    date:"2026-11",
+    images:[1,2,3,4].map(n=>`posts/overvintre-${n}.jpg`),
+    alt:["Overvintrer du i Spania? Influensavaksinen i Valencia-regionen følger en annen kalender enn i Norge",
+         "Influensaen er på vei opp i regionen: fra 3,5 til 6,0 tilfeller per 100 000 (+71 %)",
+         "Vaksinekalender: kampanjen er allerede i gang",
+         "Slik går du frem – nyttig setning: ¿Puedo vacunarme de la gripe aquí?"] },
   { id:"influensa-2026", cat:"Vaksine", title:"Influensa 2026: vaksinen kommer senere", es:"Gripe 2026",
     date:"2026-11",
     images:[1,2,3,4,5].map(n=>`posts/influensa-${n}.jpg`),
