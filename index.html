@@ -239,9 +239,15 @@ nav.bottom svg{width:24px;height:24px}
    ========================================================= */
 const CONFIG = {
   instagram: "elena.hjelpen",
-  // Dager Elena tar imot (0=søndag … 6=lørdag) og klokkeslett
-  workDays: [1, 3, 5],
-  slots: ["10:00", "11:00", "12:00", "17:00", "18:00", "19:00"],
+  // Arbeidstid per ukedag (1=mandag … 5=fredag). Timer hver halvtime.
+  schedule: {
+    1: [["09:00","14:00"]],
+    2: [["09:00","14:00"]],
+    3: [["09:00","14:00"]],
+    4: [["09:00","14:00"]],
+    5: [["09:00","14:00"], ["17:00","21:00"]]
+  },
+  slotMinutes: 30,
   daysAhead: 21,
   services: [
     { id: "video", icon: "📹", name: "Videosamtale", es: "Videollamada", time: "20 min", desc: "Snakk med Elena om helsevesenet, papirer eller hvor du bør gå." },
@@ -505,6 +511,15 @@ function upcoming(){
   for(let i=1;i<=CONFIG.daysAhead;i++){ const x=new Date(d); x.setDate(d.getDate()+i); out.push(x); }
   return out;
 }
+const pad = n => String(n).padStart(2,"0");
+const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const toMin = t => { const [h,m]=t.split(":").map(Number); return h*60+m; };
+function slotsFor(iso){
+  const ranges = CONFIG.schedule[new Date(iso+"T12:00:00").getDay()] || [];
+  const out=[];
+  ranges.forEach(([a,b])=>{ for(let m=toMin(a); m+CONFIG.slotMinutes<=toMin(b); m+=CONFIG.slotMinutes) out.push(`${pad(Math.floor(m/60))}:${pad(m%60)}`); });
+  return out;
+}
 const fmtDate = d => `${["søndag","mandag","tirsdag","onsdag","torsdag","fredag","lørdag"][d.getDay()]} ${d.getDate()}. ${MONTHS[d.getMonth()]}`;
 function renderBooking(){
   document.querySelectorAll("#steps i").forEach((el,i)=>el.classList.toggle("on", i<=bk.step));
@@ -520,9 +535,9 @@ function renderBooking(){
   if(bk.step===1){
     const days = upcoming();
     root.innerHTML = `<h3>2. Velg dag og tid</h3><div class="days">${days.map(d=>{
-        const iso=d.toISOString().slice(0,10), open=CONFIG.workDays.includes(d.getDay());
+        const iso=isoDate(d), open=!!CONFIG.schedule[d.getDay()];
         return `<button class="day ${bk.date===iso?"on":""}" data-d="${iso}" ${open?"":"disabled"}><small>${DAYS[d.getDay()]}</small><b>${d.getDate()}</b><small>${MONTHS[d.getMonth()].slice(0,3)}</small></button>`;}).join("")}</div>
-      ${bk.date?`<label>Ledige tider (spansk tid)</label><div class="slots">${CONFIG.slots.map(t=>`<button class="slot ${bk.slot===t?"on":""}" data-t="${t}">${t}</button>`).join("")}</div>`
+      ${bk.date?`<label>Ledige tider (spansk tid)</label><div class="slots">${slotsFor(bk.date).map(t=>`<button class="slot ${bk.slot===t?"on":""}" data-t="${t}">${t}</button>`).join("")}</div>`
         :`<p class="es">Velg en dag for å se tider.</p>`}
       <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:18px">
         <button class="btn ghost" id="back">Tilbake</button><button class="btn primary" id="next" ${bk.date&&bk.slot?"":"disabled"}>Neste</button></div>`;
