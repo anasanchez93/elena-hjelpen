@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F5F8B">
+<meta name="description" content="Helsehjelp for nordmenn i Spania – råd, spørsmål og timebestilling hos sykepleier Elena.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Elena hjelpen">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Elena hjelpen – helsehjelp for nordmenn i Spania</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sand:#FBF6EF; --card:#FFFFFF; --ink:#1F2A37; --muted:#5E6B7A; --line:#E8E0D4;
+  --sea:#1F5F8B; --sea-2:#E3EEF6; --coral:#E0684B; --coral-2:#FBE7E1; --green:#2E7D5B; --green-2:#E2F1EA;
+  --red:#C62828; --radius:18px; --shadow:0 2px 10px rgba(31,42,55,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--sand);color:var(--ink);font-family:"Nunito Sans",system-ui,sans-serif;font-size:16px;line-height:1.5}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;line-height:1.15;margin:0 0 .4em}
+h1{font-size:1.9rem} h2{font-size:1.45rem} h3{font-size:1.1rem}
+p{margin:0 0 .8em}
+a{color:var(--sea)}
+.app{max-width:560px;margin:0 auto;min-height:100vh;padding:0 16px 110px}
+header.top{display:flex;align-items:center;gap:10px;padding:calc(18px + env(safe-area-inset-top)) 0 10px}
+.logo{width:40px;height:40px;border-radius:50%;background:var(--sea);display:grid;place-items:center;flex:none}
+.brand{font-family:Fraunces,serif;font-weight:700;font-size:1.2rem}
+.brand small{display:block;font-family:"Nunito Sans";font-weight:600;font-size:.78rem;color:var(--muted)}
+.sos{margin-left:auto;background:var(--red);color:#fff;font-weight:800;text-decoration:none;padding:7px 12px;border-radius:999px;font-size:.9rem;white-space:nowrap}
+.view{display:none;animation:fade .25s ease}
+.view.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin:0 0 14px;box-shadow:var(--shadow)}
+.hero{background:linear-gradient(160deg,#1F5F8B 0%,#2A7AA8 100%);color:#fff;border:none}
+.hero p{color:#E6F0F7}
+.es{display:block;font-size:.8rem;color:var(--muted);font-weight:600;letter-spacing:.01em}
+.hero .es{color:#BFD7E8}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;text-align:left;cursor:pointer;font:inherit;color:inherit;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;min-height:118px}
+.tile:hover{border-color:var(--sea)}
+.tile b{font-size:1rem}
+.ico{width:38px;height:38px;border-radius:12px;display:grid;place-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:14px;padding:13px 18px;font:inherit;font-weight:800;cursor:pointer;text-decoration:none}
+.btn.primary{background:var(--coral);color:#fff}
+.btn.sea{background:var(--sea);color:#fff}
+.btn.ghost{background:var(--sea-2);color:var(--sea)}
+.btn.block{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.note{background:var(--coral-2);border-radius:14px;padding:12px 14px;font-size:.92rem;margin-bottom:14px}
+.note.green{background:var(--green-2)}
+.note.blue{background:var(--sea-2)}
+/* posts */
+.posts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.post{border-radius:16px;overflow:hidden;background:var(--card);border:1px solid var(--line);cursor:pointer;padding:0;font:inherit;text-align:left;color:inherit}
+.post .img{aspect-ratio:4/5;display:grid;place-items:center;padding:12px;text-align:center}
+.post .img b{font-family:Fraunces,serif;font-size:1.05rem;display:block;margin-top:8px}
+.post .meta{padding:8px 10px;font-size:.8rem;color:var(--muted)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 13px;font:inherit;font-size:.9rem;font-weight:700;cursor:pointer;white-space:nowrap;color:var(--ink)}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(15,22,30,.55);display:none;align-items:flex-end;justify-content:center;z-index:50}
+.modal.on{display:flex}
+.sheet{background:var(--sand);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:18px 16px 26px}
+.sheet .close{float:right;border:none;background:var(--card);border-radius:50%;width:36px;height:36px;font-size:1.2rem;cursor:pointer}
+.slides{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin:12px 0}
+.slide{flex:0 0 88%;scroll-snap-align:center;aspect-ratio:4/5;border-radius:18px;padding:22px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.slide .big{font-family:Fraunces,serif;font-size:1.6rem;font-weight:700;line-height:1.15}
+.slide .small{font-size:.9rem;opacity:.75;margin-top:6px;font-weight:700}
+.slide p{margin-top:12px;font-size:1rem}
+/* guides */
+details{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:10px;overflow:hidden}
+summary{list-style:none;cursor:pointer;padding:15px 16px;font-weight:800;display:flex;align-items:center;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";margin-left:auto;font-size:1.3rem;color:var(--muted)}
+details[open] summary::after{content:"–"}
+details .body{padding:0 16px 14px}
+details ul{padding-left:20px;margin:0 0 .6em}
+details li{margin-bottom:6px}
+/* glossary */
+input,select,textarea{width:100%;font:inherit;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;color:var(--ink)}
+textarea{min-height:110px;resize:vertical}
+label{font-weight:800;font-size:.92rem;display:block;margin:12px 0 6px}
+.word{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.word:last-child{border-bottom:none}
+.word .no{font-weight:800}
+.word .esw{color:var(--sea);font-weight:700;text-align:right}
+.say{border:none;background:var(--sea-2);color:var(--sea);border-radius:10px;padding:4px 9px;font-size:.8rem;font-weight:800;cursor:pointer;margin-top:4px}
+/* booking */
+.opts{display:grid;gap:10px}
+.opt{display:flex;gap:12px;align-items:center;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:13px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.opt.on{border-color:var(--coral);background:#FFF8F5}
+.opt small{display:block;color:var(--muted)}
+.days{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px}
+.day{flex:0 0 66px;border:2px solid var(--line);background:var(--card);border-radius:14px;padding:8px 4px;text-align:center;cursor:pointer;font:inherit;color:inherit}
+.day b{display:block;font-size:1.2rem}
+.day small{font-size:.75rem;color:var(--muted);font-weight:700;text-transform:uppercase}
+.day.on{border-color:var(--coral);background:#FFF8F5}
+.day:disabled{opacity:.35;cursor:not-allowed}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.slot{border:2px solid var(--line);background:var(--card);border-radius:12px;padding:10px;font:inherit;font-weight:800;cursor:pointer;color:inherit}
+.slot.on{border-color:var(--coral);background:var(--coral);color:#fff}
+.steps{display:flex;gap:6px;margin:6px 0 16px}
+.steps i{flex:1;height:5px;border-radius:9px;background:var(--line)}
+.steps i.on{background:var(--coral)}
+.summary{background:var(--card);border:1px dashed var(--muted);border-radius:14px;padding:14px;white-space:pre-wrap;font-size:.93rem}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:999px;font-weight:700;opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:90%;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.check{display:flex;gap:10px;align-items:flex-start;font-weight:600;font-size:.92rem;margin-top:12px}
+.check input{width:auto;margin-top:4px}
+/* nav */
+nav.bottom{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center;z-index:40;padding-bottom:env(safe-area-inset-bottom)}
+nav.bottom .in{display:flex;max-width:560px;width:100%}
+nav.bottom a{flex:1;text-align:center;padding:9px 2px 10px;font-size:.74rem;font-weight:800;color:var(--muted);text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav.bottom a.on{color:var(--coral)}
+nav.bottom svg{width:24px;height:24px}
+.footer{font-size:.8rem;color:var(--muted);text-align:center;margin-top:20px}
+.emerg{display:flex;align-items:center;gap:14px;background:#FDECEC;border:1px solid #F5C6C6;border-radius:16px;padding:14px;margin-bottom:14px}
+.emerg .num{font-family:Fraunces,serif;font-size:2rem;font-weight:700;color:var(--red)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="logo" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7.5-4.6-9.3-9.4C1.5 8.3 3.6 5 7 5c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 3.4 0 5.5 3.3 4.3 6.6C19.5 16.4 12 21 12 21z" fill="#fff"/><path d="M12 9.5v6M9 12.5h6" stroke="#1F5F8B" stroke-width="2.2" stroke-linecap="round"/></svg>
+    </div>
+    <div class="brand">Elena hjelpen<small>Helsehjelp for nordmenn i Spania</small></div>
+    <a class="sos" href="tel:112" title="Nødnummer 112">☎ 112</a>
+  </header>
+
+  <!-- HJEM -->
+  <section class="view" id="v-hjem">
+    <div class="card hero">
+      <h1>Hei! Jeg er Elena 👋</h1>
+      <p>Sykepleier i Spania. Jeg hjelper deg å forstå det spanske helsevesenet – enten du er på ferie eller bor her.</p>
+      <a class="btn primary" href="#bestill">Bestill en time med meg</a>
+    </div>
+    <div class="grid2">
+      <button class="tile" data-go="sporsmal"><span class="ico" style="background:var(--coral-2)">💬</span><b>Still et spørsmål</b><span class="es">Haz una pregunta</span></button>
+      <button class="tile" data-go="rad"><span class="ico" style="background:var(--green-2)">🧭</span><b>Råd og guider</b><span class="es">Consejos y guías</span></button>
+      <button class="tile" data-go="innlegg"><span class="ico" style="background:var(--sea-2)">📸</span><b>Innlegg fra Instagram</b><span class="es">Publicaciones</span></button>
+      <button class="tile" data-go="ordliste"><span class="ico" style="background:#F3ECFB">🗣️</span><b>Spansk hos legen</b><span class="es">Vocabulario médico</span></button>
+    </div>
+    <div class="card">
+      <h3>Dagens tips</h3>
+      <p id="tip"></p>
+      <button class="btn ghost" id="nextTip">Neste tips →</button>
+    </div>
+    <div class="emerg">
+      <div class="num">112</div>
+      <div><b>Akutt sykdom eller ulykke?</b><br>Ring 112 – gratis, døgnåpent, og du kan be om engelsk.<span class="es">Emergencias</span></div>
+    </div>
+    <p class="footer">Informasjonen i appen er generell og erstatter ikke undersøkelse hos lege.<br>Følg <a href="https://www.instagram.com/elena.hjelpen/">@elena.hjelpen</a> på Instagram</p>
+  </section>
+
+  <!-- INNLEGG -->
+  <section class="view" id="v-innlegg">
+    <h2>Innlegg</h2>
+    <p class="es" style="margin-bottom:12px">Las mismas publicaciones de Instagram</p>
+    <div class="chips" id="postChips"></div>
+    <div class="posts" id="posts"></div>
+    <p style="margin-top:16px"><a class="btn ghost block" href="https://www.instagram.com/elena.hjelpen/">Se alle på Instagram ↗</a></p>
+  </section>
+
+  <!-- RÅD -->
+  <section class="view" id="v-rad">
+    <h2>Råd og guider</h2>
+    <p class="es" style="margin-bottom:12px">Consejos y guías del sistema sanitario</p>
+    <div class="chips">
+      <button class="chip on" data-guide="alle">Alle</button>
+      <button class="chip" data-guide="ferie">På ferie</button>
+      <button class="chip" data-guide="bor">Bor i Spania</button>
+      <button class="chip" data-guide="akutt">Akutt</button>
+      <button class="chip" data-guide="apotek">Apotek</button>
+    </div>
+    <div id="guides"></div>
+    <a class="btn ghost block" href="#ordliste" style="margin-top:6px">🗣️ Spanske ord og fraser hos legen</a>
+  </section>
+
+  <!-- ORDLISTE -->
+  <section class="view" id="v-ordliste">
+    <h2>Spansk hos legen</h2>
+    <p class="es" style="margin-bottom:12px">Vocabulario noruego – español</p>
+    <input id="q" type="search" placeholder="Søk: smerte, feber, resept …" aria-label="Søk i ordlisten">
+    <div class="chips" id="wordCats" style="margin-top:10px"></div>
+    <div class="card" id="words" style="padding:6px 16px"></div>
+  </section>
+
+  <!-- SPØRSMÅL -->
+  <section class="view" id="v-sporsmal">
+    <h2>Still Elena et spørsmål</h2>
+    <p class="es" style="margin-bottom:12px">Consulta a Elena</p>
+    <div class="note">⚠️ Ikke for akutte tilfeller – ring <b>112</b>. Ikke del personnummer eller andre sensitive opplysninger her.</div>
+    <form id="qForm" class="card">
+      <label for="qTema">Tema</label>
+      <select id="qTema">
+        <option>Helsetrygdkort og rettigheter</option>
+        <option>Fastlege / helsesenter i Spania</option>
+        <option>Sykehus og legevakt</option>
+        <option>Apotek og medisiner</option>
+        <option>Registrering (SIP-kort, S1)</option>
+        <option>Annet</option>
+      </select>
+      <label for="qTekst">Ditt spørsmål</label>
+      <textarea id="qTekst" placeholder="Skriv kort hva du lurer på …" required></textarea>
+      <label for="qNavn">Fornavn (valgfritt)</label>
+      <input id="qNavn" autocomplete="given-name">
+      <button class="btn primary block" style="margin-top:16px" type="submit">Lag melding til Elena</button>
+    </form>
+    <div id="qOut" style="display:none"></div>
+    <h3 style="margin-top:22px">Ofte stilte spørsmål</h3>
+    <div id="faq"></div>
+  </section>
+
+  <!-- BESTILL -->
+  <section class="view" id="v-bestill">
+    <h2>Bestill time</h2>
+    <p class="es" style="margin-bottom:6px">Reservar cita con Elena</p>
+    <div class="steps" id="steps"><i></i><i></i><i></i><i></i></div>
+    <div id="bk"></div>
+  </section>
+</div>
+
+<nav class="bottom"><div class="in" id="nav"></div></nav>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   INNSTILLINGER – endre her (Configuración: cambia aquí)
+   ========================================================= */
+const CONFIG = {
+  instagram: "elena.hjelpen",
+  // Dager Elena tar imot (0=søndag … 6=lørdag) og klokkeslett
+  workDays: [1, 3, 5],
+  slots: ["10:00", "11:00", "12:00", "17:00", "18:00", "19:00"],
+  daysAhead: 21,
+  services: [
+    { id: "video", icon: "📹", name: "Videosamtale", es: "Videollamada", time: "20 min", desc: "Snakk med Elena om helsevesenet, papirer eller hvor du bør gå." },
+    { id: "chat", icon: "💬", name: "Chat-konsultasjon", es: "Consulta por chat", time: "15 min", desc: "Raske spørsmål på melding til avtalt tid." },
+    { id: "papir", icon: "📄", name: "Hjelp med papirer", es: "Ayuda con trámites", time: "30 min", desc: "SIP-kort, S1, registrering på helsesenter, timebestilling." },
+    { id: "tolk", icon: "🗣️", name: "Forberedelse til legetime", es: "Preparar la cita médica", time: "20 min", desc: "Vi går gjennom hva du skal si og spørre om på spansk." }
+  ]
+};
+
+/* ---------- INNHOLD: Instagram-innlegg ----------
+   Legg til nye innlegg her med samme tekst som på Instagram. */
+const POSTS = [
+  { id:"sentre", cat:"Helsesentre", color:"#E3EEF6", ink:"#1F5F8B", icon:"hospital",
+    title:"Hvilke helsesentre finnes i Spania?", es:"Tipos de centros sanitarios",
+    slides:[
+      {big:"Offentlig sykehus", small:"Hospital público", p:"Akuttmottak og spesialister. Med europeisk helsetrygdkort får du hjelp på samme vilkår som spanjoler."},
+      {big:"Helsesenter", small:"Centro de salud", p:"Spanias «fastlege». Gå hit først hvis det ikke haster."},
+      {big:"Privat sykehus", small:"Hospital privado", p:"Du betaler selv eller via reiseforsikring. Helsetrygdkortet gjelder ikke her."},
+      {big:"Har du spørsmål?", small:"¿Dudas?", p:"Send meg en melding (DM) – ikke i kommentarfeltet 💙"}
+    ]},
+  { id:"kort", cat:"Rettigheter", color:"#FBE7E1", ink:"#B24A31", icon:"card",
+    title:"Europeisk helsetrygdkort", es:"Tarjeta Sanitaria Europea",
+    slides:[
+      {big:"Bestill før du reiser", small:"Antes de viajar", p:"Kortet er gratis og bestilles på helsenorge.no."},
+      {big:"Gjelder i det offentlige", small:"Sanidad pública", p:"Nødvendig helsehjelp på samme vilkår som de som bor i Spania."},
+      {big:"Ikke på private klinikker", small:"No en privados", p:"Sjekk alltid om klinikken er offentlig før du går inn."},
+      {big:"Ta med reiseforsikring", small:"Seguro de viaje", p:"Den dekker ofte det helsetrygdkortet ikke dekker, som hjemtransport."}
+    ]},
+  { id:"apotek", cat:"Apotek", color:"#E2F1EA", ink:"#2E7D5B", icon:"cross",
+    title:"Apotek på vakt", es:"Farmacia de guardia",
+    slides:[
+      {big:"Det grønne korset", small:"La cruz verde", p:"Lyser korset, er apoteket åpent."},
+      {big:"Vaktapotek", small:"Farmacia de guardia", p:"Om natten og i helger har ett apotek i området vakt. Listen henger på døren til alle apotek."},
+      {big:"Mange medisiner krever resept", small:"Con receta", p:"Apoteket kan gi gode råd om enkle plager – spør gjerne."}
+    ]},
+  { id:"akutt", cat:"Akutt", color:"#FDECEC", ink:"#C62828", icon:"siren",
+    title:"Hvor går jeg når det haster?", es:"¿Dónde voy si es urgente?",
+    slides:[
+      {big:"Livstruende? Ring 112", small:"Emergencias", p:"Brystsmerter, pustevansker, lammelser, store skader."},
+      {big:"Legevakt", small:"Urgencias / PAC", p:"Haster, men er ikke livstruende? Legevakten i helsesenteret eller sykehusets akuttmottak."},
+      {big:"Ta med", small:"Lleva contigo", p:"Pass, helsetrygdkort, medisinliste og forsikringsbevis."}
+    ]}
+];
+
+/* ---------- INNHOLD: Guider ---------- */
+const GUIDES = [
+  { cat:"ferie", icon:"🏖️", title:"På ferie: dette må du vite", body:`
+    <ul><li>Bestill <b>europeisk helsetrygdkort</b> gratis på helsenorge.no før du reiser.</li>
+    <li>Kortet gir rett til nødvendig helsehjelp i det <b>offentlige</b> helsevesenet, på samme vilkår som de som bor her.</li>
+    <li>Private klinikker tar <b>ikke</b> imot kortet. Mange turiststeder har private klinikker som ser offentlige ut – spør før du går inn.</li>
+    <li>Ha alltid <b>reiseforsikring</b>. Ta bilde av forsikringsbeviset og ha nødnummeret til forsikringsselskapet på telefonen.</li></ul>` },
+  { cat:"bor", icon:"🏡", title:"Bor du i Spania?", body:`
+    <ul><li>Meld deg inn i kommunen (<b>empadronamiento</b>, «padrón») der du bor.</li>
+    <li>Pensjonister med norsk pensjon får vanligvis <b>S1-blankett</b> fra Helfo og registrerer den hos den spanske trygden (INSS).</li>
+    <li>I Valencia-regionen (Costa Blanca) får du så <b>SIP-kort</b> (tarjeta SIP) og et fast helsesenter (centro de salud).</li>
+    <li>Usikker på hva som gjelder deg? <a href="#bestill">Bestill «Hjelp med papirer»</a>.</li></ul>` },
+  { cat:"bor", icon:"🩺", title:"Helsesenteret – din «fastlege»", body:`
+    <ul><li>Helsesenteret (<b>centro de salud</b>) er første stopp når det ikke haster.</li>
+    <li>Du får en fast lege (médico de familia) og sykepleier (enfermera).</li>
+    <li>Time bestilles ofte på telefon, i appen til regionen eller i resepsjonen.</li>
+    <li>Henvisning til spesialist går via legen på helsesenteret.</li></ul>` },
+  { cat:"akutt", icon:"🚑", title:"Når skal jeg ringe 112?", body:`
+    <ul><li>Brystsmerter, tung pust eller besvimelse.</li>
+    <li>Plutselig skjeve munnviker, lammelser eller talevansker (mulig hjerneslag).</li>
+    <li>Alvorlige skader, store blødninger eller kraftig allergisk reaksjon.</li></ul>
+    <p>112 er gratis, døgnåpent, og du kan be om engelsk: «<i>English, please</i>».</p>` },
+  { cat:"akutt", icon:"🏥", title:"Legevakt eller akuttmottak?", body:`
+    <ul><li><b>Urgencias</b> = akuttmottak/legevakt. Finnes på sykehus og på mange helsesentre (ofte kalt PAC i Valencia-regionen).</li>
+    <li>Det som haster, men ikke er livstruende (høy feber, sår som må sys, vond øreverk): legevakten.</li>
+    <li>Du blir sortert etter hvor alvorlig det er (triaje) – ikke etter hvem som kom først.</li></ul>` },
+  { cat:"apotek", icon:"💊", title:"Apotek og medisiner", body:`
+    <ul><li>Apotek (<b>farmacia</b>) har grønt kors. Om natten finnes alltid et <b>vaktapotek</b> (farmacia de guardia) i nærheten.</li>
+    <li>Ta med <b>originalpakningen</b> eller en medisinliste med virkestoffnavn – merkenavn er ofte forskjellige i Spania.</li>
+    <li>Mange medisiner som er reseptfrie i Norge krever resept her, og omvendt. Spør farmasøyten.</li></ul>` },
+  { cat:"ferie", icon:"🧳", title:"Pakkeliste for helsa", body:`
+    <ul><li>Pass, europeisk helsetrygdkort og forsikringsbevis.</li>
+    <li>Faste medisiner til hele reisen + noen ekstra dager, i håndbagasjen.</li>
+    <li>Medisinliste på engelsk eller spansk (virkestoff og dose).</li>
+    <li>Solkrem, plaster og noe mot feber og smerter.</li></ul>` }
+];
+
+const TIPS = [
+  "Ta bilde av helsetrygdkortet og forsikringsbeviset – da har du dem alltid på mobilen.",
+  "Skriv medisinene dine med virkestoffnavn. Merkenavnene er ofte annerledes i Spania.",
+  "Grønt kors som lyser = apoteket er åpent. Vaktapoteket står oppslått på døren.",
+  "Private klinikker tar ikke imot europeisk helsetrygdkort. Spør alltid før du går inn.",
+  "På legevakten sorteres pasienter etter hvor alvorlig det er, ikke etter ankomst.",
+  "Drikk mye vann og unngå sol midt på dagen – heteslag er vanlig blant turister."
+];
+
+const WORDS = [
+  {c:"Akutt", no:"Hjelp!", es:"¡Ayuda!"},
+  {c:"Akutt", no:"Ring en ambulanse", es:"Llame a una ambulancia"},
+  {c:"Akutt", no:"Akuttmottak / legevakt", es:"Urgencias"},
+  {c:"Akutt", no:"Jeg har vondt i brystet", es:"Me duele el pecho"},
+  {c:"Akutt", no:"Jeg får ikke puste", es:"No puedo respirar"},
+  {c:"Symptomer", no:"Det gjør vondt her", es:"Me duele aquí"},
+  {c:"Symptomer", no:"Feber", es:"Fiebre"},
+  {c:"Symptomer", no:"Hodepine", es:"Dolor de cabeza"},
+  {c:"Symptomer", no:"Svimmel", es:"Mareado / mareada"},
+  {c:"Symptomer", no:"Kvalm", es:"Náuseas"},
+  {c:"Symptomer", no:"Diaré", es:"Diarrea"},
+  {c:"Symptomer", no:"Hoste", es:"Tos"},
+  {c:"Symptomer", no:"Utslett", es:"Sarpullido"},
+  {c:"Symptomer", no:"Solbrent", es:"Quemadura solar"},
+  {c:"Hos legen", no:"Jeg trenger en lege", es:"Necesito un médico"},
+  {c:"Hos legen", no:"Snakker du engelsk?", es:"¿Habla inglés?"},
+  {c:"Hos legen", no:"Jeg er allergisk mot …", es:"Soy alérgico / alérgica a …"},
+  {c:"Hos legen", no:"Jeg har diabetes", es:"Tengo diabetes"},
+  {c:"Hos legen", no:"Jeg tar disse medisinene", es:"Tomo estos medicamentos"},
+  {c:"Hos legen", no:"Time / avtale", es:"Cita"},
+  {c:"Hos legen", no:"Henvisning", es:"Volante / derivación"},
+  {c:"Apotek", no:"Resept", es:"Receta"},
+  {c:"Apotek", no:"Vaktapotek", es:"Farmacia de guardia"},
+  {c:"Apotek", no:"Smertestillende", es:"Analgésico"},
+  {c:"Apotek", no:"Hvor mange ganger om dagen?", es:"¿Cuántas veces al día?"},
+  {c:"Apotek", no:"Før / etter mat", es:"Antes / después de comer"},
+  {c:"Papirer", no:"Europeisk helsetrygdkort", es:"Tarjeta Sanitaria Europea"},
+  {c:"Papirer", no:"Folkeregistrering i kommunen", es:"Empadronamiento"},
+  {c:"Papirer", no:"Helsesenter", es:"Centro de salud"},
+  {c:"Papirer", no:"Reiseforsikring", es:"Seguro de viaje"}
+];
+
+const FAQ = [
+  {q:"Er det gratis å gå til lege i Spania?", a:"I det offentlige helsevesenet, ja – hvis du har europeisk helsetrygdkort (ferie) eller er registrert i systemet (bosatt). På private klinikker betaler du selv."},
+  {q:"Kan Elena stille diagnoser?", a:"Nei. Elena gir veiledning om helsevesenet og hjelper deg å finne riktig sted. Ved sykdom må du alltid til lege."},
+  {q:"Hvorfor skal jeg sende melding og ikke kommentere?", a:"Helse er privat. Send en direktemelding (DM), så blir spørsmålet ditt mellom deg og Elena."}
+];
+
+/* ---------- Ikoner ---------- */
+const ICONS = {
+  hospital:c=>`<svg width="70" height="70" viewBox="0 0 64 64" fill="none"><rect x="10" y="18" width="44" height="38" rx="3" fill="${c}"/><rect x="24" y="8" width="16" height="14" rx="2" fill="${c}"/><path d="M32 11v8M28 15h8" stroke="#fff" stroke-width="3" stroke-linecap="round"/><rect x="27" y="42" width="10" height="14" fill="#fff"/><g fill="#fff"><rect x="15" y="25" width="7" height="6"/><rect x="42" y="25" width="7" height="6"/><rect x="15" y="35" width="7" height="6"/><rect x="42" y="35" width="7" height="6"/></g></svg>`,
+  card:c=>`<svg width="70" height="70" viewBox="0 0 64 64" fill="none"><rect x="6" y="16" width="52" height="34" rx="5" fill="${c}"/><circle cx="32" cy="27" r="7" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="2 3"/><rect x="12" y="40" width="22" height="3" rx="1.5" fill="#fff"/></svg>`,
+  cross:c=>`<svg width="70" height="70" viewBox="0 0 64 64"><path d="M24 8h16v16h16v16H40v16H24V40H8V24h16z" fill="${c}"/></svg>`,
+  siren:c=>`<svg width="70" height="70" viewBox="0 0 64 64" fill="none"><path d="M16 50V34a16 16 0 0132 0v16z" fill="${c}"/><rect x="10" y="50" width="44" height="7" rx="2" fill="${c}"/><path d="M32 6v7M12 14l5 5M52 14l-5 5" stroke="${c}" stroke-width="3" stroke-linecap="round"/></svg>`
+};
+const NAV = [
+  {id:"hjem", label:"Hjem", svg:'<path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z"/>'},
+  {id:"innlegg", label:"Innlegg", svg:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/>'},
+  {id:"rad", label:"Råd", svg:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>'},
+  {id:"sporsmal", label:"Spør", svg:'<path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/>'},
+  {id:"bestill", label:"Time", svg:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>'}
+];
+
+/* ---------- Hjelpere ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("on"),2600); }
+async function copy(text){ try{ await navigator.clipboard.writeText(text); toast("Kopiert! Lim inn i meldingen til Elena"); return true; }catch(e){ toast("Kunne ikke kopiere – merk teksten og kopier selv"); return false; } }
+const dmLink = () => `https://ig.me/m/${CONFIG.instagram}`;
+function sendBox(text, title){
+  return `<div class="card"><h3>${title}</h3>
+    <p>1. Kopier meldingen. 2. Åpne Instagram og lim den inn i en direktemelding til <b>@${CONFIG.instagram}</b>.</p>
+    <div class="summary">${esc(text)}</div>
+    <div style="display:grid;gap:10px;margin-top:14px">
+      <button class="btn primary" data-copy>📋 Kopier meldingen</button>
+      <a class="btn sea" href="${dmLink()}" target="_blank" rel="noopener">Åpne Instagram-melding ↗</a>
+    </div>
+    <p class="es" style="margin-top:10px">Elena svarer så snart hun kan. Meldingen er ikke sendt før du sender den i Instagram.</p></div>`;
+}
+function bindCopy(root, text){ root.querySelector("[data-copy]").onclick = () => copy(text); }
+
+/* ---------- Navigasjon ---------- */
+$("#nav").innerHTML = NAV.map(n=>`<a href="#${n.id}" data-nav="${n.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">${n.svg}</svg>${n.label}</a>`).join("");
+const VIEWS = ["hjem","innlegg","rad","ordliste","sporsmal","bestill"];
+function route(){
+  let v = location.hash.replace("#","");
+  if(!VIEWS.includes(v)) v = "hjem";
+  document.querySelectorAll(".view").forEach(el=>el.classList.toggle("on", el.id==="v-"+v));
+  const navId = v==="ordliste" ? "rad" : v;
+  document.querySelectorAll("[data-nav]").forEach(a=>a.classList.toggle("on", a.dataset.nav===navId));
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange", route);
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>location.hash=b.dataset.go);
+
+/* ---------- Hjem: tips ---------- */
+let tipI = new Date().getDate() % TIPS.length;
+const showTip = () => $("#tip").textContent = TIPS[tipI];
+$("#nextTip").onclick = () => { tipI=(tipI+1)%TIPS.length; showTip(); };
+showTip();
+
+/* ---------- Innlegg ---------- */
+let postCat = "Alle";
+function renderPosts(){
+  const cats = ["Alle", ...new Set(POSTS.map(p=>p.cat))];
+  $("#postChips").innerHTML = cats.map(c=>`<button class="chip ${c===postCat?"on":""}" data-c="${esc(c)}">${esc(c)}</button>`).join("");
+  $("#postChips").querySelectorAll("button").forEach(b=>b.onclick=()=>{postCat=b.dataset.c; renderPosts();});
+  const list = POSTS.filter(p=>postCat==="Alle"||p.cat===postCat);
+  $("#posts").innerHTML = list.map(p=>`<button class="post" data-id="${p.id}">
+      <div class="img" style="background:${p.color};color:${p.ink}"><div>${ICONS[p.icon](p.ink)}<b>${esc(p.title)}</b><span class="es" style="color:${p.ink};opacity:.7">${esc(p.es)}</span></div></div>
+      <div class="meta">${p.slides.length} bilder · ${esc(p.cat)}</div></button>`).join("");
+  $("#posts").querySelectorAll(".post").forEach(b=>b.onclick=()=>openPost(b.dataset.id));
+}
+function openPost(id){
+  const p = POSTS.find(x=>x.id===id);
+  $("#sheet").innerHTML = `<button class="close" aria-label="Lukk">×</button>
+    <h2 style="padding-right:40px">${esc(p.title)}</h2><span class="es">${esc(p.es)} · sveip →</span>
+    <div class="slides">${p.slides.map(s=>`<div class="slide" style="background:${p.color};color:${p.ink}">
+      <div style="margin-bottom:14px">${ICONS[p.icon](p.ink)}</div><div style="margin-bottom:14px">${ICONS[p.icon](p.ink)}</div><div class="big">${esc(s.big)}</div><div class="small">${esc(s.small)}</div><p style="color:var(--ink)">${esc(s.p)}</p>
+      <div style="margin-top:auto;font-weight:800;font-size:.8rem">@${CONFIG.instagram}</div></div>`).join("")}</div>
+    <div style="display:grid;gap:10px">
+      <a class="btn primary" href="#sporsmal">Har du spørsmål? Spør Elena</a>
+      <a class="btn ghost" href="https://www.instagram.com/${CONFIG.instagram}/" target="_blank" rel="noopener">Se på Instagram ↗</a>
+    </div>`;
+  $("#modal").classList.add("on");
+  $("#sheet .close").onclick = closeModal;
+  $("#sheet").querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener("click",closeModal));
+}
+function closeModal(){ $("#modal").classList.remove("on"); }
+$("#modal").addEventListener("click", e=>{ if(e.target.id==="modal") closeModal(); });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeModal(); });
+
+/* ---------- Råd ---------- */
+function renderGuides(cat){
+  $("#guides").innerHTML = GUIDES.filter(g=>cat==="alle"||g.cat===cat).map(g=>
+    `<details><summary><span style="font-size:1.3rem">${g.icon}</span>${esc(g.title)}</summary><div class="body">${g.body}</div></details>`).join("");
+}
+document.querySelectorAll("[data-guide]").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("[data-guide]").forEach(x=>x.classList.toggle("on",x===b)); renderGuides(b.dataset.guide);
+});
+renderGuides("alle");
+
+/* ---------- Ordliste ---------- */
+let wordCat = "Alle";
+function renderWords(){
+  const cats = ["Alle", ...new Set(WORDS.map(w=>w.c))];
+  $("#wordCats").innerHTML = cats.map(c=>`<button class="chip ${c===wordCat?"on":""}" data-c="${esc(c)}">${esc(c)}</button>`).join("");
+  $("#wordCats").querySelectorAll("button").forEach(b=>b.onclick=()=>{wordCat=b.dataset.c; renderWords();});
+  const q = $("#q").value.trim().toLowerCase();
+  const list = WORDS.filter(w=>(wordCat==="Alle"||w.c===wordCat) && (!q || (w.no+" "+w.es).toLowerCase().includes(q)));
+  $("#words").innerHTML = list.length ? list.map((w,i)=>`<div class="word"><div class="no">${esc(w.no)}</div>
+    <div class="esw">${esc(w.es)}<br><button class="say" data-es="${esc(w.es)}">🔊 Lytt</button></div></div>`).join("")
+    : `<p style="padding:12px 0">Fant ingen ord. Spør Elena!</p>`;
+  $("#words").querySelectorAll(".say").forEach(b=>b.onclick=()=>speak(b.dataset.es));
+}
+function speak(t){
+  try{ const u=new SpeechSynthesisUtterance(t.replace("…","")); u.lang="es-ES"; u.rate=.85; speechSynthesis.cancel(); speechSynthesis.speak(u); }
+  catch(e){ toast("Lyd er ikke tilgjengelig her"); }
+}
+$("#q").addEventListener("input", renderWords);
+renderWords();
+
+/* ---------- Spørsmål ---------- */
+$("#qForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  const tekst = $("#qTekst").value.trim(); if(!tekst) return;
+  const navn = $("#qNavn").value.trim();
+  const msg = `Hei Elena! ${navn?`Jeg heter ${navn}. `:""}Jeg har et spørsmål via appen.\nTema: ${$("#qTema").value}\n\n${tekst}`;
+  const out = $("#qOut"); out.style.display="block"; out.innerHTML = sendBox(msg, "Meldingen din er klar ✅"); bindCopy(out, msg);
+  out.scrollIntoView({behavior:"smooth"});
+});
+$("#faq").innerHTML = FAQ.map(f=>`<details><summary>${esc(f.q)}</summary><div class="body"><p>${esc(f.a)}</p></div></details>`).join("");
+
+/* ---------- Bestill time ---------- */
+const DAYS = ["søn","man","tir","ons","tor","fre","lør"];
+const MONTHS = ["januar","februar","mars","april","mai","juni","juli","august","september","oktober","november","desember"];
+const bk = {step:0, service:null, date:null, slot:null, name:"", contact:"", lang:"Norsk", note:"", ok:false};
+function upcoming(){
+  const out=[]; const d=new Date(); d.setHours(0,0,0,0);
+  for(let i=1;i<=CONFIG.daysAhead;i++){ const x=new Date(d); x.setDate(d.getDate()+i); out.push(x); }
+  return out;
+}
+const fmtDate = d => `${["søndag","mandag","tirsdag","onsdag","torsdag","fredag","lørdag"][d.getDay()]} ${d.getDate()}. ${MONTHS[d.getMonth()]}`;
+function renderBooking(){
+  document.querySelectorAll("#steps i").forEach((el,i)=>el.classList.toggle("on", i<=bk.step));
+  const root = $("#bk");
+  if(bk.step===0){
+    root.innerHTML = `<h3>1. Hva trenger du hjelp med?</h3><div class="opts">${CONFIG.services.map(s=>`
+      <button class="opt ${bk.service===s.id?"on":""}" data-s="${s.id}"><span style="font-size:1.6rem">${s.icon}</span>
+      <span><b>${esc(s.name)}</b> · ${esc(s.time)}<small>${esc(s.desc)}</small><span class="es">${esc(s.es)}</span></span></button>`).join("")}</div>
+      <div class="note blue" style="margin-top:14px">Elena gir veiledning om helsevesenet – ikke diagnose eller behandling.</div>
+      <button class="btn primary block" id="next" ${bk.service?"":"disabled"}>Neste</button>`;
+    root.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{bk.service=b.dataset.s; renderBooking();});
+  }
+  if(bk.step===1){
+    const days = upcoming();
+    root.innerHTML = `<h3>2. Velg dag og tid</h3><div class="days">${days.map(d=>{
+        const iso=d.toISOString().slice(0,10), open=CONFIG.workDays.includes(d.getDay());
+        return `<button class="day ${bk.date===iso?"on":""}" data-d="${iso}" ${open?"":"disabled"}><small>${DAYS[d.getDay()]}</small><b>${d.getDate()}</b><small>${MONTHS[d.getMonth()].slice(0,3)}</small></button>`;}).join("")}</div>
+      ${bk.date?`<label>Ledige tider (spansk tid)</label><div class="slots">${CONFIG.slots.map(t=>`<button class="slot ${bk.slot===t?"on":""}" data-t="${t}">${t}</button>`).join("")}</div>`
+        :`<p class="es">Velg en dag for å se tider.</p>`}
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:18px">
+        <button class="btn ghost" id="back">Tilbake</button><button class="btn primary" id="next" ${bk.date&&bk.slot?"":"disabled"}>Neste</button></div>`;
+    root.querySelectorAll(".day").forEach(b=>b.onclick=()=>{bk.date=b.dataset.d; bk.slot=null; renderBooking();});
+    root.querySelectorAll(".slot").forEach(b=>b.onclick=()=>{bk.slot=b.dataset.t; renderBooking();});
+    const sel = root.querySelector(".day.on"); if(sel) sel.scrollIntoView({inline:"center",block:"nearest"});
+  }
+  if(bk.step===2){
+    root.innerHTML = `<h3>3. Om deg</h3>
+      <label for="bName">Navn</label><input id="bName" value="${esc(bk.name)}" autocomplete="name">
+      <label for="bContact">Telefon eller e-post</label><input id="bContact" value="${esc(bk.contact)}" autocomplete="tel">
+      <label for="bLang">Språk</label><select id="bLang">${["Norsk","Engelsk","Spansk"].map(l=>`<option ${bk.lang===l?"selected":""}>${l}</option>`).join("")}</select>
+      <label for="bNote">Kort om hva du vil snakke om (valgfritt)</label><textarea id="bNote" placeholder="F.eks. «Jeg skal registrere meg på helsesenter i Torrevieja»">${esc(bk.note)}</textarea>
+      <label class="check"><input type="checkbox" id="bOk" ${bk.ok?"checked":""}> Jeg forstår at dette ikke er for akutte tilfeller, og at Elena ikke stiller diagnoser.</label>
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:18px">
+        <button class="btn ghost" id="back">Tilbake</button><button class="btn primary" id="next">Se oppsummering</button></div>`;
+    const save=()=>{bk.name=$("#bName").value.trim(); bk.contact=$("#bContact").value.trim(); bk.lang=$("#bLang").value; bk.note=$("#bNote").value.trim(); bk.ok=$("#bOk").checked;};
+    root.querySelectorAll("input,select,textarea").forEach(el=>el.addEventListener("input",save));
+    root.querySelector("#next").onclick = ()=>{ save(); if(!bk.name||!bk.contact){toast("Fyll inn navn og kontaktinfo");return;} if(!bk.ok){toast("Kryss av for at du har forstått");return;} bk.step=3; renderBooking(); };
+    root.querySelector("#back").onclick = ()=>{ save(); bk.step=1; renderBooking(); };
+    return;
+  }
+  if(bk.step===3){
+    const s = CONFIG.services.find(x=>x.id===bk.service);
+    const d = new Date(bk.date+"T12:00:00");
+    const msg = `Hei Elena! Jeg vil gjerne bestille time via appen.\n\nType: ${s.name} (${s.time})\nØnsket tid: ${fmtDate(d)} kl. ${bk.slot}\nNavn: ${bk.name}\nKontakt: ${bk.contact}\nSpråk: ${bk.lang}${bk.note?`\nTema: ${bk.note}`:""}`;
+    root.innerHTML = sendBox(msg, "4. Send forespørselen") +
+      `<div class="note green">Timen er en <b>forespørsel</b> til Elena er bekreftet. Du får svar på Instagram.</div>
+       <button class="btn ghost block" id="restart">Start på nytt</button>`;
+    bindCopy(root, msg);
+    root.querySelector("#restart").onclick = ()=>{ Object.assign(bk,{step:0,service:null,date:null,slot:null,note:"",ok:false}); renderBooking(); };
+    return;
+  }
+  const n=root.querySelector("#next"), b=root.querySelector("#back");
+  if(n) n.onclick=()=>{bk.step++; renderBooking(); window.scrollTo(0,0);};
+  if(b) b.onclick=()=>{bk.step--; renderBooking();};
+}
+renderBooking();
+renderPosts();
+route();
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
