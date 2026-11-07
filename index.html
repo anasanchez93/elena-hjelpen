@@ -658,7 +658,7 @@ const NAV = [
 
 /* ---------- Språk ---------- */
 let LANG = "nb";
-let CUR = "EUR";
+let CUR = "NOK";
 try { const c = localStorage.getItem("eh-cur"); if (c === "EUR" || c === "NOK") CUR = c; } catch(e) {}
 try { const s = localStorage.getItem("eh-lang"); if (s === "nb" || s === "en") LANG = s; } catch(e) {}
 const t = k => (T[LANG][k] !== undefined ? T[LANG][k] : T.nb[k]);
