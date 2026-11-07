@@ -9,7 +9,7 @@
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="vendor/supabase-2.119.0.js"></script>
 <style>
 :root{--sand:#FBF6EF;--card:#fff;--ink:#1F2A37;--muted:#5E6B7A;--line:#E8E0D4;--sea:#27375C;--sea-2:#E4EEF1;--gold:#E8B54F;--gold-2:#FBF0D9;--green:#2E7D5B;--green-2:#E2F1EA;--red:#C62828;--red-2:#FDECEC}
 *{box-sizing:border-box}
@@ -39,7 +39,8 @@ label{font-weight:800;font-size:.9rem;display:block;margin:12px 0 6px}
 .meta{color:var(--muted);font-size:.9rem}
 .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .free{background:var(--gold);color:var(--sea);border-radius:6px;padding:1px 7px;font-weight:800;font-size:.8rem}
-.daysep{font-weight:800;color:var(--muted);margin:18px 0 8px;text-transform:capitalize}
+.daysep{font-weight:800;color:var(--muted);margin:18px 0 8px}
+.daysep::first-letter{text-transform:uppercase}
 .empty{text-align:center;color:var(--muted);padding:30px 10px}
 .err{color:var(--red);font-weight:700;margin-top:10px}
 .count{background:var(--red);color:#fff;border-radius:999px;padding:1px 8px;font-size:.78rem;margin-left:4px}
@@ -66,7 +67,24 @@ label{font-weight:800;font-size:.9rem;display:block;margin:12px 0 6px}
       <label for="pw">Contraseña</label><input id="pw" type="password" autocomplete="current-password" required>
       <button class="btn primary" style="width:100%;margin-top:16px" type="submit">Entrar</button>
       <div class="err" id="loginErr"></div>
+      <p style="text-align:center;margin:14px 0 0"><a href="#" id="forgot">¿Has olvidado la contraseña?</a></p>
     </form>
+    <form id="forgotForm" style="display:none">
+      <p>Te enviaremos un enlace al correo para crear una contraseña nueva.</p>
+      <label for="fem">Correo</label><input id="fem" type="email" value="elenahjelpen@gmail.com" required>
+      <button class="btn primary" style="width:100%;margin-top:16px" type="submit">Enviar enlace</button>
+      <div class="meta" id="forgotMsg" style="margin-top:10px"></div>
+      <p style="text-align:center;margin:14px 0 0"><a href="#" id="backLogin">← Volver</a></p>
+    </form>
+  </div>
+
+  <!-- NUEVA CONTRASEÑA (desde el enlace del correo) -->
+  <div id="recoverBox" class="card" style="display:none;max-width:420px;margin:40px auto">
+    <h2>Crea una contraseña nueva</h2>
+    <label for="rpw">Nueva contraseña (mínimo 8 caracteres)</label>
+    <input id="rpw" type="password" autocomplete="new-password" minlength="8">
+    <button class="btn primary" style="width:100%;margin-top:16px" id="rsave">Guardar</button>
+    <div class="err" id="rmsg"></div>
   </div>
 
   <!-- AJUSTES -->
@@ -90,6 +108,8 @@ label{font-weight:800;font-size:.9rem;display:block;margin:12px 0 6px}
 const SB_URL = "https://amjwtkrhwhkkgfmvbpsv.supabase.co";
 const SB_KEY = "sb_publishable_pDoPNtLY0kdiSXRHPGJE-g_OACpsJl6";
 const sb = supabase.createClient(SB_URL, SB_KEY);
+const APP_ADMIN = "https://anasanchez93.github.io/elena-hjelpen/admin.html";
+let recovering = false;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const SERVICES = { video:["Videollamada",40,"30 €"], chat:["Consulta por chat",15,"10 €"], papir:["Ayuda con trámites",30,"45 €"], tolk:["Preparar la cita médica",20,"30 €"] };
@@ -141,7 +161,7 @@ function render(){
         <div class="when">${r.slot.slice(0,5)} · ${esc(s[0])} <span class="meta">(${s[1]} min)</span></div>
         <div><b>${esc(r.name)}</b> · ${esc(r.contact)}</div>
         <div class="meta">Idioma: ${esc(r.lang)} · App en ${r.app_lang === "en" ? "inglés" : "noruego"} · ${r.first_time ? `<span class="free">1.ª cita – GRATIS</span>` : `Precio: ${s[2]}`}</div>
-        <div class="meta">Reservado el ${new Date(r.created_at).toLocaleString("es-ES",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</div>
+        <div class="meta">${r.user_id ? "👤 Con cuenta · " : ""}${r.status === "cancelada" && r.cancelled_by ? `Cancelada por ${r.cancelled_by === "paciente" ? "el paciente" : "ti"} · ` : ""}Reservado el ${new Date(r.created_at).toLocaleString("es-ES",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</div>
       </div><span class="badge b-${r.status}">${STATUS[r.status]}</span></div>
       ${r.note ? `<div class="note">${esc(r.note)}</div>` : ""}
       <div class="row">${contactLinks(r.contact)} <a class="btn small" href="${gcalLink(r)}" target="_blank" rel="noopener">📅 A mi calendario</a></div>
@@ -185,6 +205,8 @@ async function load(){
 
 async function show(){
   const { data: { session } } = await sb.auth.getSession();
+  if (recovering) { ["loginBox","main","topBtns"].forEach(id => $("#"+id).style.display = "none"); $("#recoverBox").style.display = "block"; return; }
+  $("#recoverBox").style.display = "none";
   $("#loginBox").style.display = session ? "none" : "block";
   $("#main").style.display = session ? "block" : "none";
   $("#topBtns").style.display = session ? "flex" : "none";
@@ -207,6 +229,22 @@ $("#savepw").onclick = async () => {
   $("#pwMsg").textContent = error ? "Error: " + error.message : "✓ Contraseña cambiada.";
   if (!error) $("#newpw").value = "";
 };
+$("#forgot").onclick = e => { e.preventDefault(); $("#loginForm").style.display = "none"; $("#forgotForm").style.display = "block"; };
+$("#backLogin").onclick = e => { e.preventDefault(); $("#forgotForm").style.display = "none"; $("#loginForm").style.display = "block"; };
+$("#forgotForm").onsubmit = async e => {
+  e.preventDefault();
+  const { error } = await sb.auth.resetPasswordForEmail($("#fem").value.trim(), { redirectTo: APP_ADMIN });
+  $("#forgotMsg").textContent = error ? "Error: " + error.message : "✓ Si el correo existe, te hemos enviado un enlace. Mira también en spam.";
+};
+$("#rsave").onclick = async () => {
+  const pw = $("#rpw").value;
+  if (pw.length < 8) { $("#rmsg").textContent = "Mínimo 8 caracteres."; return; }
+  const { error } = await sb.auth.updateUser({ password: pw });
+  if (error) { $("#rmsg").textContent = "Error: " + error.message; return; }
+  recovering = false; history.replaceState(null, "", location.pathname); show();
+};
+sb.auth.onAuthStateChange((event) => { if (event === "PASSWORD_RECOVERY") { recovering = true; show(); } });
+if (/error_code=otp_expired/.test(location.hash)) { setTimeout(() => { $("#loginErr").textContent = "El enlace ha caducado o ya se usó. Pide otro."; }, 0); }
 setInterval(() => { if ($("#main").style.display === "block" && document.visibilityState === "visible") load(); }, 60000);
 show();
 </script>
