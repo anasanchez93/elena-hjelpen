@@ -54,7 +54,7 @@ label{font-weight:800;font-size:.9rem;display:block;margin:12px 0 6px}
     <h1>Panel de reservas</h1>
     <div class="sp" id="topBtns" style="display:none">
       <button class="btn small" id="refresh">↻ Actualizar</button>
-      <button class="btn small" id="settingsBtn">⚙︎</button>
+      <button class="btn small" id="settingsBtn">⚙︎ Ajustes</button>
       <button class="btn small" id="logout">Salir</button>
     </div>
   </header>
@@ -89,6 +89,15 @@ label{font-weight:800;font-size:.9rem;display:block;margin:12px 0 6px}
 
   <!-- AJUSTES -->
   <div id="settings" class="card" style="display:none">
+    <h3>📅 Citas en el calendario del móvil</h3>
+    <p class="meta">Suscríbete una vez y las citas aparecen solas en tu calendario (se actualizan cada pocos minutos): ⏳ pendientes, ✅ confirmadas y ❌ canceladas, con aviso 30 min antes.</p>
+    <div class="row">
+      <a class="btn primary" id="calIphone" href="#">📲 Añadir al iPhone / Mac</a>
+      <button class="btn" id="calCopy">Copiar enlace (Google / Android)</button>
+    </div>
+    <p class="meta" style="margin-top:10px">El enlace es privado: no lo compartas. Si se ha compartido por error, <a href="#" id="calRotate">crea un enlace nuevo</a> (tendrás que volver a suscribirte).</p>
+    <div class="meta" id="calMsg"></div>
+    <hr style="border:none;border-top:1px solid var(--line);margin:18px 0">
     <h3>Cambiar contraseña</h3>
     <label for="newpw">Nueva contraseña (mínimo 8 caracteres)</label>
     <input id="newpw" type="password" autocomplete="new-password" minlength="8">
@@ -164,7 +173,7 @@ function render(){
         <div class="meta">${r.user_id ? "👤 Con cuenta · " : ""}${r.status === "cancelada" && r.cancelled_by ? `Cancelada por ${r.cancelled_by === "paciente" ? "el paciente" : "ti"} · ` : ""}Reservado el ${new Date(r.created_at).toLocaleString("es-ES",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</div>
       </div><span class="badge b-${r.status}">${STATUS[r.status]}</span></div>
       ${r.note ? `<div class="note">${esc(r.note)}</div>` : ""}
-      <div class="row">${contactLinks(r.contact)} <a class="btn small" href="${gcalLink(r)}" target="_blank" rel="noopener">📅 A mi calendario</a></div>
+      <div class="row">${contactLinks(r.contact)}</div>
       <div class="row">
         ${r.status !== "confirmada" ? `<button class="btn small ok" data-act="confirmada">✓ Confirmar</button>` : ""}
         ${r.status !== "realizada" ? `<button class="btn small" data-act="realizada">Hecha</button>` : ""}
@@ -221,7 +230,21 @@ $("#loginForm").onsubmit = async e => {
 };
 $("#logout").onclick = async () => { await sb.auth.signOut(); rows = []; $("#settings").style.display = "none"; show(); };
 $("#refresh").onclick = load;
-$("#settingsBtn").onclick = () => { const s = $("#settings"); s.style.display = s.style.display === "none" ? "block" : "none"; };
+$("#settingsBtn").onclick = () => { const s = $("#settings"); s.style.display = s.style.display === "none" ? "block" : "none"; if (s.style.display === "block") loadCal(); };
+const calUrl = tok => `${SB_URL}/functions/v1/calendar?token=${tok}`;
+async function loadCal(){
+  const { data, error } = await sb.rpc("calendar_token");
+  if (error || !data) { $("#calMsg").textContent = "No se pudo cargar el enlace del calendario."; return; }
+  $("#calIphone").href = calUrl(data).replace(/^https:/, "webcal:");
+  $("#calCopy").onclick = async () => { try { await navigator.clipboard.writeText(calUrl(data)); $("#calMsg").textContent = "✓ Enlace copiado."; } catch(e) { prompt("Copia este enlace:", calUrl(data)); } };
+}
+$("#calRotate").onclick = async e => {
+  e.preventDefault();
+  if (!confirm("¿Crear un enlace nuevo? El anterior dejará de funcionar y tendrás que suscribirte otra vez.")) return;
+  const { error } = await sb.rpc("rotate_calendar_token");
+  $("#calMsg").textContent = error ? "Error: " + error.message : "✓ Enlace nuevo creado. Vuelve a suscribirte.";
+  loadCal();
+};
 $("#savepw").onclick = async () => {
   const pw = $("#newpw").value;
   if (pw.length < 8) { $("#pwMsg").textContent = "Mínimo 8 caracteres."; return; }
