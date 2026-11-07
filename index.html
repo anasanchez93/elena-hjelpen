@@ -102,6 +102,7 @@ label{font-weight:800;font-size:.92rem;display:block;margin:12px 0 6px}
 .opts{display:grid;gap:10px}
 .opt{display:flex;gap:12px;align-items:center;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:13px;cursor:pointer;text-align:left;font:inherit;color:inherit}
 .opt.on{border-color:var(--coral);background:#FFF8F5}
+.opt .price{white-space:nowrap;color:var(--sea);font-size:1.05rem}
 .opt small{display:block;color:var(--muted)}
 .days{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px}
 .day{flex:0 0 66px;border:2px solid var(--line);background:var(--card);border-radius:14px;padding:8px 4px;text-align:center;cursor:pointer;font:inherit;color:inherit}
@@ -147,6 +148,7 @@ nav.bottom svg{width:24px;height:24px}
       <h1>Hei! Jeg er <em>Elena</em> 👋</h1>
       <p>Sykepleier i Spania. Jeg hjelper deg å forstå det spanske helsevesenet – enten du er på ferie eller bor her.</p>
       <a class="btn primary" href="#bestill">Bestill en time med meg</a>
+      <p style="margin:12px 0 0;font-weight:700;color:#E8B54F">🎁 Første time er gratis</p>
     </div>
     <div class="grid2">
       <button class="tile" data-go="sporsmal"><span class="ico" style="background:var(--coral-2)">💬</span><b>Still et spørsmål</b><span class="es">Haz una pregunta</span></button>
@@ -254,12 +256,14 @@ const CONFIG = {
     5: [["09:00","14:00"], ["17:00","21:00"]]
   },
   slotMinutes: 30,
+  firstFree: true,          // første time gratis
+  packageText: "Pakke: 3 timer for 75 €",
   daysAhead: 21,
   services: [
-    { id: "video", icon: "📹", name: "Videosamtale", es: "Videollamada", time: "20 min", desc: "Snakk med Elena om helsevesenet, papirer eller hvor du bør gå." },
-    { id: "chat", icon: "💬", name: "Chat-konsultasjon", es: "Consulta por chat", time: "15 min", desc: "Raske spørsmål på melding til avtalt tid." },
-    { id: "papir", icon: "📄", name: "Hjelp med papirer", es: "Ayuda con trámites", time: "30 min", desc: "SIP-kort, S1, registrering på helsesenter, timebestilling." },
-    { id: "tolk", icon: "🗣️", name: "Forberedelse til legetime", es: "Preparar la cita médica", time: "20 min", desc: "Vi går gjennom hva du skal si og spørre om på spansk." }
+    { id: "video", icon: "📹", name: "Videosamtale", es: "Videollamada", time: "20 min", price: 30, desc: "Snakk med Elena om helsevesenet, papirer eller hvor du bør gå." },
+    { id: "chat", icon: "💬", name: "Chat-konsultasjon", es: "Consulta por chat", time: "15 min", price: 20, desc: "Raske spørsmål på melding til avtalt tid." },
+    { id: "papir", icon: "📄", name: "Hjelp med papirer", es: "Ayuda con trámites", time: "30 min", price: 45, desc: "SIP-kort, S1, registrering på helsesenter, timebestilling." },
+    { id: "tolk", icon: "🗣️", name: "Forberedelse til legetime", es: "Preparar la cita médica", time: "20 min", price: 30, desc: "Vi går gjennom hva du skal si og spørre om på spansk." }
   ]
 };
 
@@ -527,7 +531,7 @@ $("#faq").innerHTML = FAQ.map(f=>`<details><summary>${esc(f.q)}</summary><div cl
 /* ---------- Bestill time ---------- */
 const DAYS = ["søn","man","tir","ons","tor","fre","lør"];
 const MONTHS = ["januar","februar","mars","april","mai","juni","juli","august","september","oktober","november","desember"];
-const bk = {step:0, service:null, date:null, slot:null, name:"", contact:"", lang:"Norsk", note:"", ok:false};
+const bk = {step:0, service:null, date:null, slot:null, name:"", contact:"", lang:"Norsk", note:"", ok:false, first:"Ja"};
 function upcoming(){
   const out=[]; const d=new Date(); d.setHours(0,0,0,0);
   for(let i=1;i<=CONFIG.daysAhead;i++){ const x=new Date(d); x.setDate(d.getDate()+i); out.push(x); }
@@ -549,7 +553,8 @@ function renderBooking(){
   if(bk.step===0){
     root.innerHTML = `<h3>1. Hva trenger du hjelp med?</h3><div class="opts">${CONFIG.services.map(s=>`
       <button class="opt ${bk.service===s.id?"on":""}" data-s="${s.id}"><span style="font-size:1.6rem">${s.icon}</span>
-      <span><b>${esc(s.name)}</b> · ${esc(s.time)}<small>${esc(s.desc)}</small><span class="es">${esc(s.es)}</span></span></button>`).join("")}</div>
+      <span style="flex:1"><b>${esc(s.name)}</b> · ${esc(s.time)}<small>${esc(s.desc)}</small><span class="es">${esc(s.es)}</span></span><b class="price">${s.price} €</b></button>`).join("")}</div>
+      ${CONFIG.firstFree?`<div class="note green" style="margin-top:14px">🎁 <b>Første time er gratis</b> – uansett hvilken type du velger.<br>${esc(CONFIG.packageText)}</div>`:""}
       <div class="note blue" style="margin-top:14px">Elena gir veiledning om helsevesenet – ikke diagnose eller behandling.</div>
       <button class="btn primary block" id="next" ${bk.service?"":"disabled"}>Neste</button>`;
     root.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{bk.service=b.dataset.s; renderBooking();});
@@ -571,12 +576,13 @@ function renderBooking(){
     root.innerHTML = `<h3>3. Om deg</h3>
       <label for="bName">Navn</label><input id="bName" value="${esc(bk.name)}" autocomplete="name">
       <label for="bContact">Telefon eller e-post</label><input id="bContact" value="${esc(bk.contact)}" autocomplete="tel">
+      ${CONFIG.firstFree?`<label for="bFirst">Er dette første gang du bestiller time hos Elena?</label><select id="bFirst">${["Ja","Nei"].map(v=>`<option ${bk.first===v?"selected":""}>${v}</option>`).join("")}</select>`:""}
       <label for="bLang">Språk</label><select id="bLang">${["Norsk","Engelsk","Spansk"].map(l=>`<option ${bk.lang===l?"selected":""}>${l}</option>`).join("")}</select>
       <label for="bNote">Kort om hva du vil snakke om (valgfritt)</label><textarea id="bNote" placeholder="F.eks. «Jeg skal registrere meg på helsesenter i Torrevieja»">${esc(bk.note)}</textarea>
       <label class="check"><input type="checkbox" id="bOk" ${bk.ok?"checked":""}> Jeg forstår at dette ikke er for akutte tilfeller, og at Elena ikke stiller diagnoser.</label>
       <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:18px">
         <button class="btn ghost" id="back">Tilbake</button><button class="btn primary" id="next">Se oppsummering</button></div>`;
-    const save=()=>{bk.name=$("#bName").value.trim(); bk.contact=$("#bContact").value.trim(); bk.lang=$("#bLang").value; bk.note=$("#bNote").value.trim(); bk.ok=$("#bOk").checked;};
+    const save=()=>{bk.name=$("#bName").value.trim(); bk.contact=$("#bContact").value.trim(); bk.lang=$("#bLang").value; if($("#bFirst")) bk.first=$("#bFirst").value; bk.note=$("#bNote").value.trim(); bk.ok=$("#bOk").checked;};
     root.querySelectorAll("input,select,textarea").forEach(el=>el.addEventListener("input",save));
     root.querySelector("#next").onclick = ()=>{ save(); if(!bk.name||!bk.contact){toast("Fyll inn navn og kontaktinfo");return;} if(!bk.ok){toast("Kryss av for at du har forstått");return;} bk.step=3; renderBooking(); };
     root.querySelector("#back").onclick = ()=>{ save(); bk.step=1; renderBooking(); };
@@ -585,9 +591,10 @@ function renderBooking(){
   if(bk.step===3){
     const s = CONFIG.services.find(x=>x.id===bk.service);
     const d = new Date(bk.date+"T12:00:00");
-    const msg = `Hei Elena! Jeg vil gjerne bestille time via appen.\n\nType: ${s.name} (${s.time})\nØnsket tid: ${fmtDate(d)} kl. ${bk.slot}\nNavn: ${bk.name}\nKontakt: ${bk.contact}\nSpråk: ${bk.lang}${bk.note?`\nTema: ${bk.note}`:""}`;
+    const free = CONFIG.firstFree && bk.first==="Ja";
+    const msg = `Hei Elena! Jeg vil gjerne bestille time via appen.\n\nType: ${s.name} (${s.time})\nPris: ${free?"Gratis – første time":s.price+" €"}\nØnsket tid: ${fmtDate(d)} kl. ${bk.slot}\nNavn: ${bk.name}\nKontakt: ${bk.contact}\nSpråk: ${bk.lang}${bk.note?`\nTema: ${bk.note}`:""}`;
     root.innerHTML = sendBox(msg, "4. Send forespørselen") +
-      `<div class="note green">Timen er en <b>forespørsel</b> til Elena er bekreftet. Du får svar på Instagram.</div>
+      `<div class="note green">Timen er en <b>forespørsel</b> til Elena har bekreftet den. Du får svar på Instagram, og betaling avtales direkte med Elena.</div>
        <button class="btn ghost block" id="restart">Start på nytt</button>`;
     bindCopy(root, msg);
     root.querySelector("#restart").onclick = ()=>{ Object.assign(bk,{step:0,service:null,date:null,slot:null,note:"",ok:false}); renderBooking(); };
