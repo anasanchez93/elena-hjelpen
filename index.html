@@ -102,6 +102,8 @@ label{font-weight:800;font-size:.92rem;display:block;margin:12px 0 6px}
 .opts{display:grid;gap:10px}
 .opt{display:flex;gap:12px;align-items:center;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:13px;cursor:pointer;text-align:left;font:inherit;color:inherit}
 .opt.on{border-color:var(--coral);background:#FFF8F5}
+.opt .det{margin:4px 0 4px;padding-left:18px;font-size:.85rem;color:var(--muted)}
+.opt .det li{margin-bottom:2px}
 .opt .price{white-space:nowrap;color:var(--sea);font-size:1.05rem}
 .opt small{display:block;color:var(--muted)}
 .days{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px}
@@ -263,7 +265,13 @@ const CONFIG = {
     { id: "video", icon: "📹", name: "Videosamtale", es: "Videollamada", time: "30 min", price: 30, desc: "Snakk med Elena om helsevesenet, papirer eller hvor du bør gå." },
     { id: "chat", icon: "💬", name: "Chat-konsultasjon", es: "Consulta por chat", time: "15 min", price: 10, from: true, desc: "Raske spørsmål på melding til avtalt tid." },
     { id: "papir", icon: "📄", name: "Hjelp med papirer", es: "Ayuda con trámites", time: "30 min", price: 45, desc: "SIP-kort, S1, registrering på helsesenter, timebestilling." },
-    { id: "tolk", icon: "🗣️", name: "Forberedelse til legetime", es: "Preparar la cita médica", time: "20 min", price: 30, desc: "Vi går gjennom hva du skal si og spørre om på spansk." }
+    { id: "tolk", icon: "🗣️", name: "Forberedelse til legetime", es: "Preparar la cita médica", time: "20 min", price: 30,
+      desc: "Har du time hos lege i Spania? Før timen går vi sammen gjennom (på video eller chat):",
+      details: ["Hvordan du forklarer plagene dine på spansk: symptomer, hvor lenge, medisiner du tar",
+                "Hvilke spørsmål du bør stille legen",
+                "Hvilke papirer du skal ta med (SIP-kort/helsetrygdkort, epikriser, medisinliste)",
+                "Du får en huskelapp på spansk som du kan vise legen"],
+      note: "Elena blir ikke med til legen og er ikke tolk." }
   ]
 };
 
@@ -553,7 +561,7 @@ function renderBooking(){
   if(bk.step===0){
     root.innerHTML = `${CONFIG.firstFree?`<div class="note green" style="font-size:1rem">🎁 <b>Første time er gratis</b> – uansett hvilken type du velger.<br><span style="font-size:.9rem">${esc(CONFIG.packageText)}</span></div>`:""}<h3>1. Hva trenger du hjelp med?</h3><div class="opts">${CONFIG.services.map(s=>`
       <button class="opt ${bk.service===s.id?"on":""}" data-s="${s.id}"><span style="font-size:1.6rem">${s.icon}</span>
-      <span style="flex:1"><b>${esc(s.name)}</b> · ${esc(s.time)}<small>${esc(s.desc)}</small><span class="es">${esc(s.es)}</span></span><b class="price">${s.from?"fra ":""}${s.price} €</b></button>`).join("")}</div>
+      <span style="flex:1"><b>${esc(s.name)}</b> · ${esc(s.time)}<small>${esc(s.desc)}</small>${s.details?`<ul class="det">${s.details.map(d=>`<li>${esc(d)}</li>`).join("")}</ul>`:""}${s.note?`<small><i>${esc(s.note)}</i></small>`:""}<span class="es">${esc(s.es)}</span></span><b class="price">${s.from?"fra ":""}${s.price} €</b></button>`).join("")}</div>
       <div class="note blue" style="margin-top:14px">Elena gir veiledning om helsevesenet – ikke diagnose eller behandling.</div>
       <button class="btn primary block" id="next" ${bk.service?"":"disabled"}>Neste</button>`;
     root.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{bk.service=b.dataset.s; renderBooking();});
