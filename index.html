@@ -260,8 +260,8 @@ const CONFIG = {
   packageText: "Pakke: 3 timer for 75 €",
   daysAhead: 21,
   services: [
-    { id: "video", icon: "📹", name: "Videosamtale", es: "Videollamada", time: "20 min", price: 30, desc: "Snakk med Elena om helsevesenet, papirer eller hvor du bør gå." },
-    { id: "chat", icon: "💬", name: "Chat-konsultasjon", es: "Consulta por chat", time: "15 min", price: 20, desc: "Raske spørsmål på melding til avtalt tid." },
+    { id: "video", icon: "📹", name: "Videosamtale", es: "Videollamada", time: "30 min", price: 30, desc: "Snakk med Elena om helsevesenet, papirer eller hvor du bør gå." },
+    { id: "chat", icon: "💬", name: "Chat-konsultasjon", es: "Consulta por chat", time: "15 min", price: 10, from: true, desc: "Raske spørsmål på melding til avtalt tid." },
     { id: "papir", icon: "📄", name: "Hjelp med papirer", es: "Ayuda con trámites", time: "30 min", price: 45, desc: "SIP-kort, S1, registrering på helsesenter, timebestilling." },
     { id: "tolk", icon: "🗣️", name: "Forberedelse til legetime", es: "Preparar la cita médica", time: "20 min", price: 30, desc: "Vi går gjennom hva du skal si og spørre om på spansk." }
   ]
@@ -553,7 +553,7 @@ function renderBooking(){
   if(bk.step===0){
     root.innerHTML = `<h3>1. Hva trenger du hjelp med?</h3><div class="opts">${CONFIG.services.map(s=>`
       <button class="opt ${bk.service===s.id?"on":""}" data-s="${s.id}"><span style="font-size:1.6rem">${s.icon}</span>
-      <span style="flex:1"><b>${esc(s.name)}</b> · ${esc(s.time)}<small>${esc(s.desc)}</small><span class="es">${esc(s.es)}</span></span><b class="price">${s.price} €</b></button>`).join("")}</div>
+      <span style="flex:1"><b>${esc(s.name)}</b> · ${esc(s.time)}<small>${esc(s.desc)}</small><span class="es">${esc(s.es)}</span></span><b class="price">${s.from?"fra ":""}${s.price} €</b></button>`).join("")}</div>
       ${CONFIG.firstFree?`<div class="note green" style="margin-top:14px">🎁 <b>Første time er gratis</b> – uansett hvilken type du velger.<br>${esc(CONFIG.packageText)}</div>`:""}
       <div class="note blue" style="margin-top:14px">Elena gir veiledning om helsevesenet – ikke diagnose eller behandling.</div>
       <button class="btn primary block" id="next" ${bk.service?"":"disabled"}>Neste</button>`;
@@ -592,7 +592,7 @@ function renderBooking(){
     const s = CONFIG.services.find(x=>x.id===bk.service);
     const d = new Date(bk.date+"T12:00:00");
     const free = CONFIG.firstFree && bk.first==="Ja";
-    const msg = `Hei Elena! Jeg vil gjerne bestille time via appen.\n\nType: ${s.name} (${s.time})\nPris: ${free?"Gratis – første time":s.price+" €"}\nØnsket tid: ${fmtDate(d)} kl. ${bk.slot}\nNavn: ${bk.name}\nKontakt: ${bk.contact}\nSpråk: ${bk.lang}${bk.note?`\nTema: ${bk.note}`:""}`;
+    const msg = `Hei Elena! Jeg vil gjerne bestille time via appen.\n\nType: ${s.name} (${s.time})\nPris: ${free?"Gratis – første time":(s.from?"fra ":"")+s.price+" €"}\nØnsket tid: ${fmtDate(d)} kl. ${bk.slot}\nNavn: ${bk.name}\nKontakt: ${bk.contact}\nSpråk: ${bk.lang}${bk.note?`\nTema: ${bk.note}`:""}`;
     root.innerHTML = sendBox(msg, "4. Send forespørselen") +
       `<div class="note green">Timen er en <b>forespørsel</b> til Elena har bekreftet den. Du får svar på Instagram, og betaling avtales direkte med Elena.</div>
        <button class="btn ghost block" id="restart">Start på nytt</button>`;
