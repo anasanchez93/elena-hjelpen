@@ -227,7 +227,10 @@ nav.bottom svg{width:24px;height:24px}
       <label for="qTekst" data-i18n="askQ"></label>
       <textarea id="qTekst" data-i18n-ph="askQph" required></textarea>
       <label for="qNavn" data-i18n="askName"></label>
-      <input id="qNavn" autocomplete="given-name">
+      <input id="qNavn" autocomplete="given-name" maxlength="100">
+      <label for="qKontakt" data-i18n="askContact"></label>
+      <input id="qKontakt" autocomplete="email" maxlength="150" required>
+      <label class="check"><input type="checkbox" id="qPriv"> <span><span data-i18n="bPriv"></span> <a href="#sporsmal" id="qPrivLink" data-i18n="privLink"></a></span></label>
       <button class="btn primary block" style="margin-top:16px" type="submit" data-i18n="askBtn"></button>
     </form>
     <div id="qOut" style="display:none"></div>
@@ -324,8 +327,13 @@ const T = {
     wordsSearchAria: "Søk i ordlisten", listen: "🔊 Lytt", noWords: "Fant ingen ord. Spør Elena!", noSound: "Lyd er ikke tilgjengelig her",
     askTitle: "Still Elena et spørsmål",
     askWarn: "⚠️ Ikke for akutte tilfeller – ring <b>112</b>. Ikke del personnummer eller andre sensitive opplysninger her.",
+    askContact: "E-post eller telefon (så Elena kan svare deg)", askNeedContact: "Skriv e-post eller telefon, så Elena kan svare deg",
+    askNeedPriv: "Kryss av for personvern", askSentTitle: "Spørsmålet er sendt!",
+    askSentText: c => `Elena svarer deg så snart hun kan, på <b>${c}</b>. Spørsmålet ditt ser bare Elena.`,
+    askAgain: "Still et nytt spørsmål", askTooMany: "Du har sendt mange spørsmål i dag. Vent til Elena har svart.",
+    askFail: "Vi fikk ikke sendt spørsmålet. Prøv igjen, eller send en e-post til <b>elenahjelpen@gmail.com</b>.",
     askTopic: "Tema", askQ: "Ditt spørsmål", askQph: "Skriv kort hva du lurer på …", askName: "Fornavn (valgfritt)",
-    askBtn: "Lag melding til Elena", msgReady: "Meldingen din er klar ✅", faqTitle: "Ofte stilte spørsmål",
+    askBtn: "Send spørsmålet", msgReady: "Meldingen din er klar ✅", faqTitle: "Ofte stilte spørsmål",
     topics: ["Helsetrygdkort og rettigheter","Fastlege / helsesenter i Spania","Sykehus og legevakt","Apotek og medisiner","Registrering (SIP-kort, S1)","Annet"],
     msgQ: (name, topic, text) => `Hei Elena! ${name?`Jeg heter ${name}. `:""}Jeg har et spørsmål via appen.\nTema: ${topic}\n\n${text}`,
     sendHow: "1. Kopier meldingen. 2. Åpne Instagram og lim den inn i en direktemelding til",
@@ -358,9 +366,9 @@ const T = {
     errTooMany: "Du har allerede 3 timer som venter på bekreftelse. Vent til Elena har svart, eller send henne en melding.",
     errSend: "Vi fikk ikke sendt bestillingen. Du kan sende den som melding på Instagram:",
     privTitle: "Personvern",
-    privText: `<p><b>Hvem:</b> Elena hjelpen (Elena, sykepleier). Kontakt: elenahjelpen@gmail.com eller DM på Instagram.</p>
-      <p><b>Hva lagres:</b> navn, telefon/e-post, valgt tjeneste og tid, språk og det du skriver om hva du vil snakke om.</p>
-      <p><b>Hvorfor:</b> bare for å behandle og bekrefte timebestillingen din.</p>
+    privText: `<p><b>Hvem:</b> Elena hjelpen (Elena, sykepleier). Kontakt: elenahjelpen@gmail.com eller skjemaet «Spør» i appen.</p>
+      <p><b>Hva lagres:</b> navn, telefon/e-post, valgt tjeneste og tid, språk, det du skriver om hva du vil snakke om, og spørsmål du sender via skjemaet.</p>
+      <p><b>Hvorfor:</b> bare for å behandle timebestillingen din og svare på spørsmålene dine.</p>
       <p><b>Hvem ser det:</b> bare Elena. Opplysningene lagres på en sikker server i EU (Paris) hos Supabase.</p>
       <p><b>Hvor lenge:</b> opplysningene slettes automatisk 12 måneder etter timen.</p>
       <p><b>E-post:</b> bekreftelser om timen sendes fra elenahjelpen@gmail.com (Google).</p>
@@ -403,8 +411,13 @@ const T = {
     wordsSearchAria: "Search the word list", listen: "🔊 Listen", noWords: "No words found. Ask Elena!", noSound: "Sound is not available here",
     askTitle: "Ask Elena a question",
     askWarn: "⚠️ Not for emergencies – call <b>112</b>. Don't share ID numbers or other sensitive information here.",
+    askContact: "Email or phone (so Elena can reply)", askNeedContact: "Please write your email or phone so Elena can reply",
+    askNeedPriv: "Please tick the privacy box", askSentTitle: "Your question has been sent!",
+    askSentText: c => `Elena will reply as soon as she can, at <b>${c}</b>. Only Elena sees your question.`,
+    askAgain: "Ask another question", askTooMany: "You have sent many questions today. Please wait for Elena's reply.",
+    askFail: "We couldn't send your question. Please try again, or email <b>elenahjelpen@gmail.com</b>.",
     askTopic: "Topic", askQ: "Your question", askQph: "Briefly write what you'd like to know …", askName: "First name (optional)",
-    askBtn: "Create message to Elena", msgReady: "Your message is ready ✅", faqTitle: "Frequently asked questions",
+    askBtn: "Send question", msgReady: "Your message is ready ✅", faqTitle: "Frequently asked questions",
     topics: ["European Health Insurance Card and rights","GP / health centre in Spain","Hospital and emergency care","Pharmacy and medicines","Registration (SIP card, S1)","Other"],
     msgQ: (name, topic, text) => `Hi Elena! ${name?`My name is ${name}. `:""}I have a question from the app.\nTopic: ${topic}\n\n${text}`,
     sendHow: "1. Copy the message. 2. Open Instagram and paste it into a direct message to",
@@ -437,9 +450,9 @@ const T = {
     errTooMany: "You already have 3 appointments waiting for confirmation. Please wait for Elena's reply, or send her a message.",
     errSend: "We couldn't send the booking. You can send it as a message on Instagram:",
     privTitle: "Privacy",
-    privText: `<p><b>Who:</b> Elena hjelpen (Elena, nurse). Contact: elenahjelpen@gmail.com or DM on Instagram.</p>
-      <p><b>What is stored:</b> name, phone/email, chosen service and time, language and what you write about the topic.</p>
-      <p><b>Why:</b> only to handle and confirm your booking.</p>
+    privText: `<p><b>Who:</b> Elena hjelpen (Elena, nurse). Contact: elenahjelpen@gmail.com or the “Ask” form in the app.</p>
+      <p><b>What is stored:</b> name, phone/email, chosen service and time, language, what you write about the topic, and questions you send through the form.</p>
+      <p><b>Why:</b> only to handle your booking and answer your questions.</p>
       <p><b>Who sees it:</b> only Elena. The data is stored on a secure server in the EU (Paris) with Supabase.</p>
       <p><b>How long:</b> the data is deleted automatically 12 months after the appointment.</p>
       <p><b>Email:</b> confirmations about your appointment are sent from elenahjelpen@gmail.com (Google).</p>
@@ -641,9 +654,9 @@ const FAQ = [
   { q:{ nb:"Kan Elena stille diagnoser?", en:"Can Elena make diagnoses?" },
     a:{ nb:"Nei. Elena gir veiledning om helsevesenet og hjelper deg å finne riktig sted. Ved sykdom må du alltid til lege.",
         en:"No. Elena gives guidance about the health system and helps you find the right place. If you are ill, you must always see a doctor." } },
-  { q:{ nb:"Hvorfor skal jeg sende melding og ikke kommentere?", en:"Why should I send a message instead of commenting?" },
-    a:{ nb:"Helse er privat. Send en direktemelding (DM), så blir spørsmålet ditt mellom deg og Elena.",
-        en:"Health is private. Send a direct message (DM), so your question stays between you and Elena." } }
+  { q:{ nb:"Hvor kan jeg stille Elena et spørsmål?", en:"Where can I ask Elena a question?" },
+    a:{ nb:"Helse er privat. Bruk skjemaet «Still Elena et spørsmål» her i appen – da går spørsmålet rett til Elena, og ingen andre ser det.",
+        en:"Health is private. Use the “Ask Elena a question” form here in the app – your question goes straight to Elena, and nobody else sees it." } }
 ];
 
 /* ---------- Ikoner ---------- */
@@ -789,11 +802,32 @@ function speak(s){
 $("#q").addEventListener("input", renderWords);
 
 /* ---------- Spørsmål ---------- */
-$("#qForm").addEventListener("submit", e=>{
+$("#qPrivLink").onclick = e => { e.preventDefault(); openPrivacy(); };
+let qSending = false;
+$("#qForm").addEventListener("submit", async e=>{
   e.preventDefault();
-  const tekst = $("#qTekst").value.trim(); if(!tekst) return;
-  const msg = t("msgQ")($("#qNavn").value.trim(), $("#qTema").value, tekst);
-  const out = $("#qOut"); out.style.display="block"; out.innerHTML = sendBox(msg, t("msgReady")); bindCopy(out, msg);
+  if(qSending) return;
+  const tekst = $("#qTekst").value.trim(), kontakt = $("#qKontakt").value.trim();
+  if(!tekst) return;
+  if(kontakt.length < 3){ toast(t("askNeedContact")); return; }
+  if(!$("#qPriv").checked){ toast(t("askNeedPriv")); return; }
+  qSending = true; const btn = $("#qForm button[type=submit]"); btn.disabled = true; btn.textContent = t("sending");
+  let err = null;
+  try{
+    const r = await api("questions", { topic: $("#qTema").value, body: tekst, name: $("#qNavn").value.trim() || null,
+      contact: kontakt, app_lang: LANG, consent: true });
+    if(!r.ok){ const j = await r.json().catch(()=>({})); err = String(j.message||"").includes("too_many") ? "tooMany" : "server"; }
+  }catch(x){ err = "network"; }
+  qSending = false; btn.disabled = false; btn.textContent = t("askBtn");
+  const out = $("#qOut"); out.style.display = "block";
+  if(!err){
+    $("#qForm").style.display = "none";
+    out.innerHTML = `<div class="card" style="text-align:center"><div style="font-size:2.4rem">✅</div><h3>${t("askSentTitle")}</h3>
+      <p>${t("askSentText")(esc(kontakt))}</p><button class="btn ghost" id="qAgain">${t("askAgain")}</button></div>`;
+    $("#qAgain").onclick = () => { $("#qTekst").value = ""; out.style.display = "none"; $("#qForm").style.display = "block"; };
+  } else {
+    out.innerHTML = `<div class="note">${t(err === "tooMany" ? "askTooMany" : "askFail")}</div>`;
+  }
   out.scrollIntoView({behavior:"smooth"});
 });
 function renderFaq(){
@@ -1067,6 +1101,7 @@ if(sbc){
     if(event === "PASSWORD_RECOVERY"){ acct.mode = "newpw"; location.hash = "konto"; }
     if(event === "SIGNED_OUT"){ acct.list = null; acct.mode = null; }
     if(session && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) setTimeout(loadMine, 0);
+    if(session){ const md = session.user.user_metadata || {}; if(!$("#qKontakt").value) $("#qKontakt").value = session.user.email || ""; if(!$("#qNavn").value) $("#qNavn").value = md.name || ""; }
     if(event === "SIGNED_IN" && authReturn) location.hash = "konto";
     renderAccount();
     if(bk.step === 2) renderBooking();

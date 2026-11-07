@@ -123,7 +123,7 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const SERVICES = { video:["Videollamada",40,"30 € / 330 kr"], chat:["Consulta por chat",15,"10 € / 110 kr"], papir:["Ayuda con trámites",30,"45 € / 495 kr"], tolk:["Preparar la cita médica",20,"30 € / 330 kr"] };
 const STATUS = { pendiente:"Pendiente", confirmada:"Confirmada", cancelada:"Cancelada", realizada:"Realizada" };
-let rows = [], tab = "proximas";
+let rows = [], questions = [], tab = location.hash === "#preguntas" ? "preguntas" : "proximas";
 
 const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
 const fmtDay = iso => new Date(iso+"T12:00:00").toLocaleDateString("es-ES", { weekday:"long", day:"numeric", month:"long" });
@@ -151,10 +151,12 @@ function gcalLink(r){
 function render(){
   const today = todayISO();
   const pend = rows.filter(r => r.status === "pendiente" && r.date >= today).length;
-  const tabs = [["proximas","Próximas"],["pendientes",`Pendientes${pend?` <span class="count">${pend}</span>`:""}`],["historial","Historial"]];
+  const newQ = questions.filter(q => q.status === "nueva").length;
+  const tabs = [["proximas","Próximas"],["pendientes",`Pendientes${pend?` <span class="count">${pend}</span>`:""}`],["preguntas",`Preguntas${newQ?` <span class="count">${newQ}</span>`:""}`],["historial","Historial"]];
   $("#tabs").innerHTML = tabs.map(([k,l]) => `<button class="tab ${tab===k?"on":""}" data-t="${k}">${l}</button>`).join("");
   $("#tabs").querySelectorAll(".tab").forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
 
+  if (tab === "preguntas") return renderQuestions();
   let list;
   if (tab === "proximas") list = rows.filter(r => r.date >= today && (r.status === "pendiente" || r.status === "confirmada"));
   else if (tab === "pendientes") list = rows.filter(r => r.date >= today && r.status === "pendiente");
@@ -194,6 +196,41 @@ function render(){
     card.querySelector("[data-savenote]").onclick = () => update(id, { admin_note: card.querySelector("[data-note]").value.trim() || null });
   });
 }
+function renderQuestions(){
+  if (!questions.length) { $("#list").innerHTML = `<div class="empty">No hay preguntas todavía.</div>`; return; }
+  $("#list").innerHTML = questions.map(q => `<div class="card" data-q="${q.id}">
+    <div class="bk-head"><div>
+      <div class="when">${esc(q.name || "Sin nombre")}</div>
+      <div><b>${esc(q.contact)}</b></div>
+      <div class="meta">${esc(q.topic || "")} · App en ${q.app_lang === "en" ? "inglés" : "noruego"}${q.user_id ? " · 👤 Con cuenta" : ""}</div>
+      <div class="meta">${new Date(q.created_at).toLocaleString("es-ES",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</div>
+    </div><span class="badge ${q.status === "nueva" ? "b-pendiente" : "b-confirmada"}">${q.status === "nueva" ? "Nueva" : "Respondida"}</span></div>
+    <div class="note">${esc(q.body)}</div>
+    <div class="row">${replyLinks(q)}</div>
+    <div class="row">
+      ${q.status === "nueva" ? `<button class="btn small ok" data-qs="respondida">✓ Marcar como respondida</button>` : `<button class="btn small" data-qs="nueva">Marcar como nueva</button>`}
+      <button class="btn small no" data-qdel>🗑 Borrar</button>
+    </div></div>`).join("");
+  $("#list").querySelectorAll("[data-q]").forEach(card => {
+    const id = card.dataset.q;
+    card.querySelectorAll("[data-qs]").forEach(b => b.onclick = async () => {
+      const { error } = await sb.from("questions").update({ status: b.dataset.qs }).eq("id", id);
+      if (error) alertBox("No se pudo guardar: " + error.message); else load();
+    });
+    const del = card.querySelector("[data-qdel]");
+    del.onclick = async () => { if (del.dataset.sure) { await sb.from("questions").delete().eq("id", id); load(); } else { del.dataset.sure = "1"; del.textContent = "¿Seguro? Pulsa otra vez"; } };
+  });
+}
+function replyLinks(q){
+  const v = String(q.contact).trim();
+  if (/@/.test(v)) {
+    const subj = q.app_lang === "en" ? "Re: your question – Elena hjelpen" : "Svar på spørsmålet ditt – Elena hjelpen";
+    const greet = q.app_lang === "en" ? `Hi${q.name ? " " + q.name : ""},\n\n` : `Hei${q.name ? " " + q.name : ""},\n\n`;
+    const quote = `\n\n---\n${q.body}`;
+    return `<a class="btn small primary" href="mailto:${esc(v)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(greet + quote)}">✉︎ Responder por email</a>`;
+  }
+  return contactLinks(v);
+}
 function confirmDelete(card){
   const b = card.querySelector("[data-del]");
   if (b.dataset.sure) return true;
@@ -207,9 +244,12 @@ async function update(id, patch){
 function alertBox(msg){ const d = document.createElement("div"); d.className = "card err"; d.textContent = msg; $("#list").prepend(d); setTimeout(()=>d.remove(), 5000); }
 
 async function load(){
-  const { data, error } = await sb.from("bookings").select("*").order("date").order("slot");
-  if (error) { alertBox("Error al cargar: " + error.message); return; }
-  rows = data; render();
+  const [b, q] = await Promise.all([
+    sb.from("bookings").select("*").order("date").order("slot"),
+    sb.from("questions").select("*").order("created_at", { ascending: false }),
+  ]);
+  if (b.error) { alertBox("Error al cargar: " + b.error.message); return; }
+  rows = b.data; questions = q.error ? [] : q.data; render();
 }
 
 async function show(){
