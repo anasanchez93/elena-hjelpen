@@ -266,6 +266,16 @@ const CONFIG = {
 /* ---------- INNHOLD: Instagram-innlegg ----------
    Legg til nye innlegg her med samme tekst som på Instagram. */
 const POSTS = [
+  { id:"helsesenteret", cat:"Helsesenter", title:"Helsesenteret i Spania", es:"Centro de salud",
+    date:"2026-11",
+    images:[1,2,3,4,5,6,7].map(n=>`posts/helsesenteret-${n}.jpg`),
+    alt:["Helsesenteret i Spania – din første kontakt med helsevesenet",
+         "Slik henger det sammen: helsesenteret i helsevesenet",
+         "Hva gjør helsesenteret? Fastlege, sykepleier, resept, henvisning, barnelege og jordmor",
+         "Når går du dit? Helsesenter eller akuttmottak",
+         "Bosatt: slik får du tilgang til helsesenteret",
+         "På ferie med helsetrygdkortet: slik fungerer det",
+         "Bosatt eller på ferie? Sammenligning"] },
   { id:"offentlig-sykehus", cat:"Sykehus", title:"Offentlig sykehus i Spania", es:"Hospital público",
     date:"2026-11",
     images:[1,2,3,4,5,6].map(n=>`posts/offentlig-sykehus-${n}.jpg`),
