@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#27375C">
+<title>Panel de reservas – Elena hjelpen</title>
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root{--sand:#FBF6EF;--card:#fff;--ink:#1F2A37;--muted:#5E6B7A;--line:#E8E0D4;--sea:#27375C;--sea-2:#E4EEF1;--gold:#E8B54F;--gold-2:#FBF0D9;--green:#2E7D5B;--green-2:#E2F1EA;--red:#C62828;--red-2:#FDECEC}
+*{box-sizing:border-box}
+body{margin:0;background:var(--sand);color:var(--ink);font-family:"Nunito Sans",system-ui,sans-serif;line-height:1.45}
+h1,h2,h3{font-family:Poppins,system-ui,sans-serif;margin:0 0 .4em}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px 60px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+header h1{font-size:1.25rem}
+header .sp{margin-left:auto;display:flex;gap:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+input,textarea,select{width:100%;font:inherit;border:1px solid var(--line);border-radius:10px;padding:11px;background:#fff}
+label{font-weight:800;font-size:.9rem;display:block;margin:12px 0 6px}
+.btn{border:none;border-radius:10px;padding:10px 14px;font:inherit;font-weight:800;cursor:pointer;background:var(--sea-2);color:var(--sea);text-decoration:none;display:inline-block}
+.btn.primary{background:var(--sea);color:#fff}
+.btn.ok{background:var(--green-2);color:var(--green)}
+.btn.no{background:var(--red-2);color:var(--red)}
+.btn.small{padding:7px 10px;font-size:.85rem}
+.btn:disabled{opacity:.5}
+.tabs{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font:inherit;font-weight:800;cursor:pointer}
+.tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.badge{display:inline-block;border-radius:999px;padding:3px 10px;font-size:.78rem;font-weight:800}
+.b-pendiente{background:var(--gold-2);color:#8a5a00}.b-confirmada{background:var(--green-2);color:var(--green)}
+.b-cancelada{background:var(--red-2);color:var(--red)}.b-realizada{background:#eee;color:#555}
+.bk-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.when{font-family:Poppins,sans-serif;font-weight:700;font-size:1.05rem}
+.meta{color:var(--muted);font-size:.9rem}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.free{background:var(--gold);color:var(--sea);border-radius:6px;padding:1px 7px;font-weight:800;font-size:.8rem}
+.daysep{font-weight:800;color:var(--muted);margin:18px 0 8px;text-transform:capitalize}
+.empty{text-align:center;color:var(--muted);padding:30px 10px}
+.err{color:var(--red);font-weight:700;margin-top:10px}
+.count{background:var(--red);color:#fff;border-radius:999px;padding:1px 8px;font-size:.78rem;margin-left:4px}
+.note{white-space:pre-wrap;background:var(--sand);border-radius:10px;padding:8px 10px;margin-top:8px;font-size:.92rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="icons/icon-192.png" width="36" height="36" alt="" style="border-radius:50%">
+    <h1>Panel de reservas</h1>
+    <div class="sp" id="topBtns" style="display:none">
+      <button class="btn small" id="refresh">↻ Actualizar</button>
+      <button class="btn small" id="settingsBtn">⚙︎</button>
+      <button class="btn small" id="logout">Salir</button>
+    </div>
+  </header>
+
+  <!-- LOGIN -->
+  <div id="loginBox" class="card" style="display:none;max-width:420px;margin:40px auto">
+    <h2>Entrar</h2>
+    <form id="loginForm">
+      <label for="em">Correo</label><input id="em" type="email" autocomplete="username" value="elenahjelpen@gmail.com" required>
+      <label for="pw">Contraseña</label><input id="pw" type="password" autocomplete="current-password" required>
+      <button class="btn primary" style="width:100%;margin-top:16px" type="submit">Entrar</button>
+      <div class="err" id="loginErr"></div>
+    </form>
+  </div>
+
+  <!-- AJUSTES -->
+  <div id="settings" class="card" style="display:none">
+    <h3>Cambiar contraseña</h3>
+    <label for="newpw">Nueva contraseña (mínimo 8 caracteres)</label>
+    <input id="newpw" type="password" autocomplete="new-password" minlength="8">
+    <div class="row"><button class="btn primary" id="savepw">Guardar contraseña</button></div>
+    <div class="meta" id="pwMsg" style="margin-top:8px"></div>
+  </div>
+
+  <!-- LISTA -->
+  <div id="main" style="display:none">
+    <div class="tabs" id="tabs"></div>
+    <div id="list"></div>
+    <p class="meta" style="text-align:center;margin-top:24px">Las reservas se borran automáticamente 12 meses después de la cita.</p>
+  </div>
+</div>
+
+<script>
+const SB_URL = "https://amjwtkrhwhkkgfmvbpsv.supabase.co";
+const SB_KEY = "sb_publishable_pDoPNtLY0kdiSXRHPGJE-g_OACpsJl6";
+const sb = supabase.createClient(SB_URL, SB_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const SERVICES = { video:["Videollamada",40,"30 €"], chat:["Consulta por chat",15,"10 €"], papir:["Ayuda con trámites",30,"45 €"], tolk:["Preparar la cita médica",20,"30 €"] };
+const STATUS = { pendiente:"Pendiente", confirmada:"Confirmada", cancelada:"Cancelada", realizada:"Realizada" };
+let rows = [], tab = "proximas";
+
+const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+const fmtDay = iso => new Date(iso+"T12:00:00").toLocaleDateString("es-ES", { weekday:"long", day:"numeric", month:"long" });
+
+function contactLinks(c){
+  const v = String(c).trim();
+  if (/@/.test(v)) return `<a class="btn small" href="mailto:${esc(v)}">✉︎ Email</a>`;
+  const digits = v.replace(/[^\d+]/g, "");
+  if (digits.replace(/\D/g,"").length >= 8) {
+    const wa = digits.replace(/^\+/, "").replace(/^00/, "");
+    return `<a class="btn small" href="tel:${esc(digits)}">☎ Llamar</a> <a class="btn small" href="https://wa.me/${esc(wa)}" target="_blank" rel="noopener">WhatsApp</a>`;
+  }
+  return "";
+}
+function gcalLink(r){
+  const s = SERVICES[r.service] || [r.service, 30];
+  const start = new Date(`${r.date}T${r.slot.slice(0,5)}:00`);
+  const end = new Date(start.getTime() + s[1]*60000);
+  const f = d => `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}T${String(d.getHours()).padStart(2,"0")}${String(d.getMinutes()).padStart(2,"0")}00`;
+  const p = new URLSearchParams({ action:"TEMPLATE", text:`Elena hjelpen: ${s[0]} – ${r.name}`, dates:`${f(start)}/${f(end)}`, ctz:"Europe/Madrid",
+    details:`Contacto: ${r.contact}\nIdioma: ${r.lang}${r.note?`\nTema: ${r.note}`:""}` });
+  return `https://calendar.google.com/calendar/render?${p}`;
+}
+
+function render(){
+  const today = todayISO();
+  const pend = rows.filter(r => r.status === "pendiente" && r.date >= today).length;
+  const tabs = [["proximas","Próximas"],["pendientes",`Pendientes${pend?` <span class="count">${pend}</span>`:""}`],["historial","Historial"]];
+  $("#tabs").innerHTML = tabs.map(([k,l]) => `<button class="tab ${tab===k?"on":""}" data-t="${k}">${l}</button>`).join("");
+  $("#tabs").querySelectorAll(".tab").forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
+
+  let list;
+  if (tab === "proximas") list = rows.filter(r => r.date >= today && (r.status === "pendiente" || r.status === "confirmada"));
+  else if (tab === "pendientes") list = rows.filter(r => r.date >= today && r.status === "pendiente");
+  else list = rows.filter(r => r.date < today || r.status === "cancelada" || r.status === "realizada").reverse();
+
+  if (!list.length) { $("#list").innerHTML = `<div class="empty">No hay reservas aquí todavía.</div>`; return; }
+  let html = "", lastDay = "";
+  for (const r of list) {
+    if (r.date !== lastDay) { html += `<div class="daysep">${fmtDay(r.date)}</div>`; lastDay = r.date; }
+    const s = SERVICES[r.service] || [r.service, "", ""];
+    html += `<div class="card" data-id="${r.id}">
+      <div class="bk-head"><div>
+        <div class="when">${r.slot.slice(0,5)} · ${esc(s[0])} <span class="meta">(${s[1]} min)</span></div>
+        <div><b>${esc(r.name)}</b> · ${esc(r.contact)}</div>
+        <div class="meta">Idioma: ${esc(r.lang)} · App en ${r.app_lang === "en" ? "inglés" : "noruego"} · ${r.first_time ? `<span class="free">1.ª cita – GRATIS</span>` : `Precio: ${s[2]}`}</div>
+        <div class="meta">Reservado el ${new Date(r.created_at).toLocaleString("es-ES",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</div>
+      </div><span class="badge b-${r.status}">${STATUS[r.status]}</span></div>
+      ${r.note ? `<div class="note">${esc(r.note)}</div>` : ""}
+      <div class="row">${contactLinks(r.contact)} <a class="btn small" href="${gcalLink(r)}" target="_blank" rel="noopener">📅 A mi calendario</a></div>
+      <div class="row">
+        ${r.status !== "confirmada" ? `<button class="btn small ok" data-act="confirmada">✓ Confirmar</button>` : ""}
+        ${r.status !== "realizada" ? `<button class="btn small" data-act="realizada">Hecha</button>` : ""}
+        ${r.status !== "cancelada" ? `<button class="btn small no" data-act="cancelada">✕ Cancelar</button>` : ""}
+        ${r.status === "cancelada" ? `<button class="btn small no" data-del>🗑 Borrar</button>` : ""}
+      </div>
+      <label>Notas privadas</label>
+      <textarea rows="2" data-note>${esc(r.admin_note)}</textarea>
+      <div class="row"><button class="btn small" data-savenote>Guardar nota</button></div>
+    </div>`;
+  }
+  $("#list").innerHTML = html;
+  $("#list").querySelectorAll(".card").forEach(card => {
+    const id = card.dataset.id;
+    card.querySelectorAll("[data-act]").forEach(b => b.onclick = () => update(id, { status: b.dataset.act }));
+    const del = card.querySelector("[data-del]");
+    if (del) del.onclick = async () => { if (confirmDelete(card)) { await sb.from("bookings").delete().eq("id", id); load(); } };
+    card.querySelector("[data-savenote]").onclick = () => update(id, { admin_note: card.querySelector("[data-note]").value.trim() || null });
+  });
+}
+function confirmDelete(card){
+  const b = card.querySelector("[data-del]");
+  if (b.dataset.sure) return true;
+  b.dataset.sure = "1"; b.textContent = "¿Seguro? Pulsa otra vez"; return false;
+}
+async function update(id, patch){
+  const { error } = await sb.from("bookings").update(patch).eq("id", id);
+  if (error) { alertBox("No se pudo guardar: " + error.message); return; }
+  load();
+}
+function alertBox(msg){ const d = document.createElement("div"); d.className = "card err"; d.textContent = msg; $("#list").prepend(d); setTimeout(()=>d.remove(), 5000); }
+
+async function load(){
+  const { data, error } = await sb.from("bookings").select("*").order("date").order("slot");
+  if (error) { alertBox("Error al cargar: " + error.message); return; }
+  rows = data; render();
+}
+
+async function show(){
+  const { data: { session } } = await sb.auth.getSession();
+  $("#loginBox").style.display = session ? "none" : "block";
+  $("#main").style.display = session ? "block" : "none";
+  $("#topBtns").style.display = session ? "flex" : "none";
+  if (session) load();
+}
+
+$("#loginForm").onsubmit = async e => {
+  e.preventDefault(); $("#loginErr").textContent = "";
+  const { error } = await sb.auth.signInWithPassword({ email: $("#em").value.trim(), password: $("#pw").value });
+  if (error) { $("#loginErr").textContent = "Correo o contraseña incorrectos."; return; }
+  $("#pw").value = ""; show();
+};
+$("#logout").onclick = async () => { await sb.auth.signOut(); rows = []; $("#settings").style.display = "none"; show(); };
+$("#refresh").onclick = load;
+$("#settingsBtn").onclick = () => { const s = $("#settings"); s.style.display = s.style.display === "none" ? "block" : "none"; };
+$("#savepw").onclick = async () => {
+  const pw = $("#newpw").value;
+  if (pw.length < 8) { $("#pwMsg").textContent = "Mínimo 8 caracteres."; return; }
+  const { error } = await sb.auth.updateUser({ password: pw });
+  $("#pwMsg").textContent = error ? "Error: " + error.message : "✓ Contraseña cambiada.";
+  if (!error) $("#newpw").value = "";
+};
+setInterval(() => { if ($("#main").style.display === "block" && document.visibilityState === "visible") load(); }, 60000);
+show();
+</script>
+</body>
+</html>

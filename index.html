@@ -120,6 +120,7 @@ label{font-weight:800;font-size:.92rem;display:block;margin:12px 0 6px}
 .day:disabled{opacity:.35;cursor:not-allowed}
 .slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .slot{border:2px solid var(--line);background:var(--card);border-radius:12px;padding:10px;font:inherit;font-weight:800;cursor:pointer;color:inherit}
+.slot:disabled{opacity:.35;text-decoration:line-through;cursor:not-allowed}
 .slot.on{border-color:var(--coral);background:var(--coral);color:var(--sea)}
 .steps{display:flex;gap:6px;margin:6px 0 16px}
 .steps i{flex:1;height:5px;border-radius:9px;background:var(--line)}
@@ -247,6 +248,8 @@ nav.bottom svg{width:24px;height:24px}
    ========================================================= */
 const CONFIG = {
   instagram: "elena.hjelpen",
+  // Database for timebestillinger (offentlig nøkkel – trygt å ha her)
+  supabase: { url: "https://amjwtkrhwhkkgfmvbpsv.supabase.co", key: "sb_publishable_pDoPNtLY0kdiSXRHPGJE-g_OACpsJl6" },
   // Arbeidstid per ukedag (1=mandag … 5=fredag). Timer hver halvtime.
   schedule: {
     1: [["09:00","14:00"]],
@@ -314,6 +317,20 @@ const T = {
     notSent: "Elena svarer så snart hun kan. Meldingen er ikke sendt før du sender den i Instagram.",
     copied: "Kopiert! Lim inn i meldingen til Elena", copyFail: "Kunne ikke kopiere – merk teksten og kopier selv",
     bookTitle: "Bestill time",
+    busy: "Opptatt", noHealthData: "Ikke skriv detaljerte helseopplysninger her – det tar vi i timen.",
+    bPriv: "Jeg godtar at opplysningene lagres for å behandle timebestillingen.", privLink: "Les om personvern",
+    sendBtn: "Send forespørsel", sending: "Sender …", step4alt: "Send forespørselen på Instagram i stedet",
+    sentTitle: "Forespørselen er sendt!", sentText: c => `Elena bekrefter timen så snart hun kan, på <b>${c}</b> eller på Instagram.`,
+    newBooking: "Bestill en ny time", errTaken: "Den tiden ble nettopp tatt – velg en annen.",
+    errTooMany: "Du har allerede 3 timer som venter på bekreftelse. Vent til Elena har svart, eller send henne en melding.",
+    errSend: "Vi fikk ikke sendt bestillingen. Du kan sende den som melding på Instagram:",
+    privTitle: "Personvern",
+    privText: `<p><b>Hvem:</b> Elena hjelpen (Elena, sykepleier). Kontakt: elenahjelpen@gmail.com eller DM på Instagram.</p>
+      <p><b>Hva lagres:</b> navn, telefon/e-post, valgt tjeneste og tid, språk og det du skriver om hva du vil snakke om.</p>
+      <p><b>Hvorfor:</b> bare for å behandle og bekrefte timebestillingen din.</p>
+      <p><b>Hvem ser det:</b> bare Elena. Opplysningene lagres på en sikker server i EU (Paris) hos Supabase.</p>
+      <p><b>Hvor lenge:</b> opplysningene slettes automatisk 12 måneder etter timen.</p>
+      <p><b>Dine rettigheter:</b> du kan be om innsyn, retting eller sletting når som helst ved å kontakte Elena.</p>`,
     firstFreeLong: "<b>Første time er gratis</b> – uansett hvilken type du velger.",
     step1: "1. Hva trenger du hjelp med?", payVipps: "💳 Du kan betale med <b>Vipps</b>", from: "fra",
     noDiagnosis: "Elena gir veiledning om helsevesenet – ikke diagnose eller behandling.",
@@ -322,9 +339,9 @@ const T = {
     yes: "Ja", no: "Nei", bLang: "Språk", langs: ["Norsk","Engelsk","Spansk"],
     bNote: "Kort om hva du vil snakke om (valgfritt)", bNotePh: "F.eks. «Jeg skal registrere meg på helsesenter i Torrevieja»",
     bOk: "Jeg forstår at dette ikke er for akutte tilfeller, og at Elena ikke stiller diagnoser.",
-    summaryBtn: "Se oppsummering", fillIn: "Fyll inn navn og kontaktinfo", tickOk: "Kryss av for at du har forstått",
-    step4: "4. Send forespørselen",
-    requestNote: "Timen er en <b>forespørsel</b> til Elena har bekreftet den. Du får svar på Instagram. Du kan betale med <b>Vipps</b> – Elena sender deg betalingsinfo når timen er bekreftet.",
+    summaryBtn: "Se oppsummering", fillIn: "Fyll inn navn og kontaktinfo", tickOk: "Kryss av i begge boksene",
+    step4: "4. Se over og send",
+    requestNote: "Timen er en <b>forespørsel</b> til Elena har bekreftet den. Du kan betale med <b>Vipps</b> – Elena sender deg betalingsinfo når timen er bekreftet.",
     restart: "Start på nytt", freeFirst: "Gratis – første time", at: "kl.",
     msgBook: (o) => `Hei Elena! Jeg vil gjerne bestille time via appen.\n\nType: ${o.type}\nPris: ${o.price}\nØnsket tid: ${o.when}\nNavn: ${o.name}\nKontakt: ${o.contact}\nSpråk: ${o.lang}${o.note?`\nTema: ${o.note}`:""}`,
     days: ["søn","man","tir","ons","tor","fre","lør"],
@@ -360,6 +377,20 @@ const T = {
     notSent: "Elena replies as soon as she can. The message isn't sent until you send it on Instagram.",
     copied: "Copied! Paste it into your message to Elena", copyFail: "Couldn't copy – select the text and copy it yourself",
     bookTitle: "Book an appointment",
+    busy: "Taken", noHealthData: "Please don't write detailed health information here – we'll cover that in the session.",
+    bPriv: "I agree that my details are stored to handle the booking.", privLink: "Read about privacy",
+    sendBtn: "Send request", sending: "Sending …", step4alt: "Send the request on Instagram instead",
+    sentTitle: "Your request has been sent!", sentText: c => `Elena will confirm the appointment as soon as she can, at <b>${c}</b> or on Instagram.`,
+    newBooking: "Book another appointment", errTaken: "That time was just taken – please choose another.",
+    errTooMany: "You already have 3 appointments waiting for confirmation. Please wait for Elena's reply, or send her a message.",
+    errSend: "We couldn't send the booking. You can send it as a message on Instagram:",
+    privTitle: "Privacy",
+    privText: `<p><b>Who:</b> Elena hjelpen (Elena, nurse). Contact: elenahjelpen@gmail.com or DM on Instagram.</p>
+      <p><b>What is stored:</b> name, phone/email, chosen service and time, language and what you write about the topic.</p>
+      <p><b>Why:</b> only to handle and confirm your booking.</p>
+      <p><b>Who sees it:</b> only Elena. The data is stored on a secure server in the EU (Paris) with Supabase.</p>
+      <p><b>How long:</b> the data is deleted automatically 12 months after the appointment.</p>
+      <p><b>Your rights:</b> you can ask for access, correction or deletion at any time by contacting Elena.</p>`,
     firstFreeLong: "<b>Your first session is free</b> – whichever type you choose.",
     step1: "1. What do you need help with?", payVipps: "💳 You can pay with <b>Vipps</b>", from: "from",
     noDiagnosis: "Elena gives guidance about the health system – not diagnosis or treatment.",
@@ -368,9 +399,9 @@ const T = {
     yes: "Yes", no: "No", bLang: "Language", langs: ["Norwegian","English","Spanish"],
     bNote: "Briefly, what would you like to talk about? (optional)", bNotePh: "E.g. “I need to register at a health centre in Torrevieja”",
     bOk: "I understand this is not for emergencies, and that Elena does not make diagnoses.",
-    summaryBtn: "See summary", fillIn: "Please fill in your name and contact details", tickOk: "Please tick the box to confirm",
-    step4: "4. Send your request",
-    requestNote: "This is a <b>request</b> until Elena confirms it. You'll get a reply on Instagram. You can pay with <b>Vipps</b> – Elena sends you the payment details once the appointment is confirmed.",
+    summaryBtn: "See summary", fillIn: "Please fill in your name and contact details", tickOk: "Please tick both boxes",
+    step4: "4. Review and send",
+    requestNote: "This is a <b>request</b> until Elena confirms it. You can pay with <b>Vipps</b> – Elena sends you the payment details once the appointment is confirmed.",
     restart: "Start again", freeFirst: "Free – first session", at: "at",
     msgBook: (o) => `Hi Elena! I'd like to book an appointment from the app.\n\nType: ${o.type}\nPrice: ${o.price}\nPreferred time: ${o.when}\nName: ${o.name}\nContact: ${o.contact}\nLanguage: ${o.lang}${o.note?`\nTopic: ${o.note}`:""}`,
     days: ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],
@@ -707,7 +738,22 @@ function renderFaq(){
 }
 
 /* ---------- Bestill time ---------- */
-const bk = {step:0, service:null, date:null, slot:null, name:"", contact:"", lang:0, note:"", ok:false, first:true};
+const bk = {step:0, service:null, date:null, slot:null, name:"", contact:"", lang:0, note:"", ok:false, privacy:false, first:true, taken:new Set(), sending:false, done:false};
+const api = (path, body) => fetch(`${CONFIG.supabase.url}/rest/v1/${path}`, {
+  method: "POST",
+  headers: { apikey: CONFIG.supabase.key, "Content-Type": "application/json", Prefer: "return=minimal" },
+  body: JSON.stringify(body)
+});
+async function loadTaken(){
+  try{
+    const days = upcoming();
+    const r = await api("rpc/taken_slots", { d_from: isoDate(days[0]), d_to: isoDate(days[days.length-1]) });
+    if(!r.ok) throw 0;
+    const rows = await r.json();
+    bk.taken = new Set(rows.map(x => `${x.date} ${x.slot.slice(0,5)}`));
+  }catch(e){ /* uten nett: vis alle tider */ }
+}
+const isTaken = (date, slot) => bk.taken.has(`${date} ${slot}`);
 function upcoming(){
   const out=[]; const d=new Date(); d.setHours(0,0,0,0);
   for(let i=1;i<=CONFIG.daysAhead;i++){ const x=new Date(d); x.setDate(d.getDate()+i); out.push(x); }
@@ -722,10 +768,37 @@ function slotsFor(iso){
   ranges.forEach(([a,b])=>{ for(let m=toMin(a); m+CONFIG.slotMinutes<=toMin(b); m+=CONFIG.slotMinutes) out.push(`${pad(Math.floor(m/60))}:${pad(m%60)}`); });
   return out;
 }
+const dayFull = iso => slotsFor(iso).every(s => isTaken(iso, s));
 const fmtDate = d => LANG === "en"
   ? `${t("daysLong")[d.getDay()]} ${d.getDate()} ${t("months")[d.getMonth()]}`
   : `${t("daysLong")[d.getDay()]} ${d.getDate()}. ${t("months")[d.getMonth()]}`;
 const priceText = s => `${s.from?t("from")+" ":""}${s.price} €`;
+function openPrivacy(){
+  $("#sheet").innerHTML = `<button class="close" aria-label="${t("close")}">×</button><h2 style="padding-right:40px">${t("privTitle")}</h2>${t("privText")}`;
+  $("#modal").classList.add("on"); $("#sheet .close").onclick = closeModal;
+}
+function bookingMsg(){
+  const s = CONFIG.services.find(x=>x.id===bk.service);
+  const d = new Date(bk.date+"T12:00:00");
+  const free = CONFIG.firstFree && bk.first;
+  return t("msgBook")({ type:`${L(s.name)} (${s.time})`, price: free ? t("freeFirst") : priceText(s),
+    when:`${fmtDate(d)} ${t("at")} ${bk.slot}`, name:bk.name, contact:bk.contact, lang:t("langs")[bk.lang], note:bk.note });
+}
+async function submitBooking(){
+  if(bk.sending) return;
+  bk.sending = true; renderBooking();
+  let err = null;
+  try{
+    const r = await api("bookings", { service:bk.service, date:bk.date, slot:bk.slot, name:bk.name, contact:bk.contact,
+      lang:t("langs")[bk.lang], note:bk.note || null, first_time:!!(CONFIG.firstFree && bk.first), app_lang:LANG, consent:true });
+    if(!r.ok){ const j = await r.json().catch(()=>({})); err = j.code === "23505" ? "taken" : (String(j.message||"").includes("too_many") ? "tooMany" : "server"); }
+  }catch(e){ err = "network"; }
+  bk.sending = false;
+  if(!err){ bk.done = true; bk.taken.add(`${bk.date} ${bk.slot}`); }
+  else if(err === "taken"){ toast(t("errTaken")); bk.slot = null; bk.step = 1; await loadTaken(); }
+  else { bk.error = err; }
+  renderBooking(); window.scrollTo(0,0);
+}
 function renderBooking(){
   document.querySelectorAll("#steps i").forEach((el,i)=>el.classList.toggle("on", i<=bk.step));
   const root = $("#bk");
@@ -737,13 +810,16 @@ function renderBooking(){
       <div class="note blue">${t("noDiagnosis")}</div>
       <button class="btn primary block" id="next" ${bk.service?"":"disabled"}>${t("next")}</button>`;
     root.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{bk.service=b.dataset.s; renderBooking();});
+    root.querySelector("#next").onclick = async ()=>{ bk.step=1; renderBooking(); window.scrollTo(0,0); await loadTaken(); if(bk.step===1) renderBooking(); };
+    return;
   }
   if(bk.step===1){
     const days = upcoming();
     root.innerHTML = `<h3>${t("step2")}</h3><div class="days">${days.map(d=>{
-        const iso=isoDate(d), open=!!CONFIG.schedule[d.getDay()];
+        const iso=isoDate(d), open=!!CONFIG.schedule[d.getDay()] && !dayFull(iso);
         return `<button class="day ${bk.date===iso?"on":""}" data-d="${iso}" ${open?"":"disabled"}><small>${t("days")[d.getDay()]}</small><b>${d.getDate()}</b><small>${t("months")[d.getMonth()].slice(0,3)}</small></button>`;}).join("")}</div>
-      ${bk.date?`<label>${t("slotsLabel")}</label><div class="slots">${slotsFor(bk.date).map(s=>`<button class="slot ${bk.slot===s?"on":""}" data-t="${s}">${s}</button>`).join("")}</div>`
+      ${bk.date?`<label>${t("slotsLabel")}</label><div class="slots">${slotsFor(bk.date).map(s=>{ const tk=isTaken(bk.date,s);
+          return `<button class="slot ${bk.slot===s?"on":""}" data-t="${s}" ${tk?"disabled":""} title="${tk?esc(t("busy")):""}">${s}</button>`;}).join("")}</div>`
         :`<p class="es">${t("pickDay")}</p>`}
       <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:18px">
         <button class="btn ghost" id="back">${t("back")}</button><button class="btn primary" id="next" ${bk.date&&bk.slot?"":"disabled"}>${t("next")}</button></div>`;
@@ -754,33 +830,47 @@ function renderBooking(){
   if(bk.step===2){
     const langIdx = bk.langTouched ? bk.lang : (LANG==="en" ? 1 : 0);
     root.innerHTML = `<h3>${t("step3")}</h3>
-      <label for="bName">${t("bName")}</label><input id="bName" value="${esc(bk.name)}" autocomplete="name">
-      <label for="bContact">${t("bContact")}</label><input id="bContact" value="${esc(bk.contact)}" autocomplete="tel">
+      <label for="bName">${t("bName")}</label><input id="bName" value="${esc(bk.name)}" autocomplete="name" maxlength="100">
+      <label for="bContact">${t("bContact")}</label><input id="bContact" value="${esc(bk.contact)}" autocomplete="tel" maxlength="150">
       ${CONFIG.firstFree?`<label for="bFirst">${t("bFirst")}</label><select id="bFirst"><option value="1" ${bk.first?"selected":""}>${t("yes")}</option><option value="0" ${bk.first?"":"selected"}>${t("no")}</option></select>`:""}
       <label for="bLang">${t("bLang")}</label><select id="bLang">${t("langs").map((l,i)=>`<option value="${i}" ${langIdx===i?"selected":""}>${l}</option>`).join("")}</select>
-      <label for="bNote">${t("bNote")}</label><textarea id="bNote" placeholder="${esc(t("bNotePh"))}">${esc(bk.note)}</textarea>
+      <label for="bNote">${t("bNote")}</label><textarea id="bNote" maxlength="1000" placeholder="${esc(t("bNotePh"))}">${esc(bk.note)}</textarea>
+      <p class="es" style="margin-top:4px">${t("noHealthData")}</p>
       <label class="check"><input type="checkbox" id="bOk" ${bk.ok?"checked":""}> ${t("bOk")}</label>
+      <label class="check"><input type="checkbox" id="bPriv" ${bk.privacy?"checked":""}> <span>${t("bPriv")} <a href="#bestill" id="privLink">${t("privLink")}</a></span></label>
       <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:18px">
         <button class="btn ghost" id="back">${t("back")}</button><button class="btn primary" id="next">${t("summaryBtn")}</button></div>`;
-    const save=()=>{bk.name=$("#bName").value.trim(); bk.contact=$("#bContact").value.trim(); bk.lang=+$("#bLang").value; if($("#bFirst")) bk.first=$("#bFirst").value==="1"; bk.note=$("#bNote").value.trim(); bk.ok=$("#bOk").checked;};
+    const save=()=>{bk.name=$("#bName").value.trim(); bk.contact=$("#bContact").value.trim(); bk.lang=+$("#bLang").value; if($("#bFirst")) bk.first=$("#bFirst").value==="1"; bk.note=$("#bNote").value.trim(); bk.ok=$("#bOk").checked; bk.privacy=$("#bPriv").checked;};
     $("#bLang").addEventListener("change", ()=>{ bk.langTouched=true; });
+    $("#privLink").onclick = e => { e.preventDefault(); openPrivacy(); };
     root.querySelectorAll("input,select,textarea").forEach(el=>el.addEventListener("input",save));
     save();
-    root.querySelector("#next").onclick = ()=>{ save(); if(!bk.name||!bk.contact){toast(t("fillIn"));return;} if(!bk.ok){toast(t("tickOk"));return;} bk.step=3; renderBooking(); };
+    root.querySelector("#next").onclick = ()=>{ save(); if(!bk.name||bk.contact.length<3){toast(t("fillIn"));return;} if(!bk.ok||!bk.privacy){toast(t("tickOk"));return;} bk.step=3; bk.error=null; renderBooking(); window.scrollTo(0,0); };
     root.querySelector("#back").onclick = ()=>{ save(); bk.step=1; renderBooking(); };
     return;
   }
   if(bk.step===3){
-    const s = CONFIG.services.find(x=>x.id===bk.service);
-    const d = new Date(bk.date+"T12:00:00");
-    const free = CONFIG.firstFree && bk.first;
-    const msg = t("msgBook")({ type:`${L(s.name)} (${s.time})`, price: free ? t("freeFirst") : priceText(s),
-      when:`${fmtDate(d)} ${t("at")} ${bk.slot}`, name:bk.name, contact:bk.contact, lang:t("langs")[bk.lang], note:bk.note });
-    root.innerHTML = sendBox(msg, t("step4")) +
-      `<div class="note green">${t("requestNote")}</div>
-       <button class="btn ghost block" id="restart">${t("restart")}</button>`;
-    bindCopy(root, msg);
-    root.querySelector("#restart").onclick = ()=>{ Object.assign(bk,{step:0,service:null,date:null,slot:null,note:"",ok:false}); renderBooking(); };
+    const msg = bookingMsg();
+    if(bk.done){
+      root.innerHTML = `<div class="card" style="text-align:center"><div style="font-size:2.6rem">✅</div><h3>${t("sentTitle")}</h3>
+        <p>${t("sentText")(esc(bk.contact))}</p><div class="summary" style="text-align:left">${esc(msg)}</div></div>
+        <div class="note green">${t("requestNote")}</div>
+        <button class="btn ghost block" id="restart">${t("newBooking")}</button>`;
+    } else if(bk.error){
+      root.innerHTML = `<div class="note">${t(bk.error==="tooMany"?"errTooMany":"errSend")}</div>` + (bk.error==="tooMany" ? "" : sendBox(msg, t("step4alt"))) +
+        `<button class="btn ghost block" id="restart">${t("restart")}</button>`;
+      if(bk.error!=="tooMany") bindCopy(root, msg);
+    } else {
+      root.innerHTML = `<h3>${t("step4")}</h3><div class="summary">${esc(msg)}</div>
+        <div class="note green" style="margin-top:14px">${t("requestNote")}</div>
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px">
+          <button class="btn ghost" id="back">${t("back")}</button>
+          <button class="btn primary" id="send" ${bk.sending?"disabled":""}>${bk.sending?t("sending"):t("sendBtn")}</button></div>`;
+      root.querySelector("#send").onclick = submitBooking;
+      root.querySelector("#back").onclick = ()=>{ bk.step=2; renderBooking(); };
+      return;
+    }
+    root.querySelector("#restart").onclick = ()=>{ Object.assign(bk,{step:0,service:null,date:null,slot:null,note:"",ok:false,privacy:false,done:false,error:null}); renderBooking(); };
     return;
   }
   const n=root.querySelector("#next"), b=root.querySelector("#back");
