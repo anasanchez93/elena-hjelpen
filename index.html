@@ -72,6 +72,9 @@ header.top{display:flex;align-items:center;gap:10px;padding:calc(18px + env(safe
 .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .post .thumb{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;background:#27375C}
 .posts .post:only-child{grid-column:1/-1}
+.thumbwrap{position:relative;display:block}
+.play{position:absolute;inset:0;margin:auto;width:54px;height:54px;border-radius:50%;background:rgba(39,55,92,.8);color:#fff;display:grid;place-items:center;font-size:1.3rem;padding-left:4px}
+.reel{display:block;width:100%;max-height:72vh;aspect-ratio:9/16;background:#000;border-radius:18px;margin:12px 0}
 .slideimg{flex:0 0 88%;scroll-snap-align:center;width:88%;border-radius:18px;display:block;box-shadow:var(--shadow)}
 /* modal */
 .modal{position:fixed;inset:0;background:rgba(15,22,30,.55);display:none;align-items:flex-end;justify-content:center;z-index:50}
@@ -294,7 +297,7 @@ const T = {
     tipTitle: "Dagens tips", tipNext: "Neste tips →",
     emergTitle: "Akutt sykdom eller ulykke?", emergText: "Ring 112 – gratis, døgnåpent, og du kan be om engelsk.",
     footer: "Informasjonen i appen er generell og erstatter ikke undersøkelse hos lege.", follow: "Følg på Instagram:",
-    postsTitle: "Innlegg", postsLangNote: "", seeAllIg: "Se alle på Instagram ↗", all: "Alle", images: "bilder",
+    postsTitle: "Innlegg", postsLangNote: "", video: "Video", seeAllIg: "Se alle på Instagram ↗", all: "Alle", images: "bilder",
     swipe: "sveip →", close: "Lukk", askElena: "Har du spørsmål? Spør Elena", seeOnIg: "Se på Instagram ↗",
     guidesTitle: "Råd og guider", toWords: "🗣️ Spanske ord og fraser hos legen",
     gAll: "Alle", gHoliday: "På ferie", gLive: "Bor i Spania", gUrgent: "Akutt", gPharmacy: "Apotek",
@@ -328,7 +331,7 @@ const T = {
     daysLong: ["søndag","mandag","tirsdag","onsdag","torsdag","fredag","lørdag"],
     months: ["januar","februar","mars","april","mai","juni","juli","august","september","oktober","november","desember"],
     nav: { hjem:"Hjem", innlegg:"Innlegg", rad:"Råd", sporsmal:"Spør", bestill:"Time" },
-    cats: { Reise:"Reise", Vaksine:"Vaksine", Helsesenter:"Helsesenter", Sykehus:"Sykehus",
+    cats: { Trening:"Trening", Reise:"Reise", Vaksine:"Vaksine", Helsesenter:"Helsesenter", Sykehus:"Sykehus",
             Akutt:"Akutt", Symptomer:"Symptomer", "Hos legen":"Hos legen", Apotek:"Apotek", Papirer:"Papirer" }
   },
   en: {
@@ -340,7 +343,7 @@ const T = {
     tipTitle: "Tip of the day", tipNext: "Next tip →",
     emergTitle: "Sudden illness or accident?", emergText: "Call 112 – free, 24/7, and you can ask for English.",
     footer: "The information in this app is general and does not replace a medical examination.", follow: "Follow on Instagram:",
-    postsTitle: "Posts", postsLangNote: "ℹ️ The Instagram posts are in Norwegian.", seeAllIg: "See all on Instagram ↗", all: "All", images: "images",
+    postsTitle: "Posts", postsLangNote: "ℹ️ The Instagram posts and videos are in Norwegian.", video: "Video", seeAllIg: "See all on Instagram ↗", all: "All", images: "images",
     swipe: "swipe →", close: "Close", askElena: "Questions? Ask Elena", seeOnIg: "See on Instagram ↗",
     guidesTitle: "Tips and guides", toWords: "🗣️ Spanish words and phrases at the doctor's",
     gAll: "All", gHoliday: "On holiday", gLive: "Living in Spain", gUrgent: "Urgent", gPharmacy: "Pharmacy",
@@ -374,7 +377,7 @@ const T = {
     daysLong: ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
     months: ["January","February","March","April","May","June","July","August","September","October","November","December"],
     nav: { hjem:"Home", innlegg:"Posts", rad:"Guides", sporsmal:"Ask", bestill:"Book" },
-    cats: { Reise:"Travel", Vaksine:"Vaccines", Helsesenter:"Health centre", Sykehus:"Hospital",
+    cats: { Trening:"Exercise", Reise:"Travel", Vaksine:"Vaccines", Helsesenter:"Health centre", Sykehus:"Hospital",
             Akutt:"Emergency", Symptomer:"Symptoms", "Hos legen":"At the doctor's", Apotek:"Pharmacy", Papirer:"Paperwork" }
   }
 };
@@ -382,6 +385,10 @@ const T = {
 /* ---------- INNHOLD: Instagram-innlegg ----------
    Legg til nye innlegg her (nyeste først). Bildene er på norsk. */
 const POSTS = [
+  { id:"hverdagssterk", cat:"Trening", es:"No necesitas gimnasio para ponerte fuerte",
+    title:{ nb:"Du trenger ikke gym for å bli sterkere", en:"You don't need a gym to get stronger" },
+    video:"videos/hverdagssterk.mp4", poster:"videos/hverdagssterk.jpg",
+    alt:["Du trenger ikke gym for å bli sterkere: knebøy fra stol, armhevinger mot vegg, roing med strikk og skulderpress med vannflasker. 2–3 runder, 4–12 repetisjoner. Kilde: Helsedirektoratet."] },
   { id:"overvintre-sjekkliste", cat:"Reise", es:"¿Vas a pasar el invierno en España?",
     title:{ nb:"Skal du overvintre i Spania? 3 ting å sjekke før du drar", en:"Spending the winter in Spain? 3 things to check before you go" },
     images:[1,2,3,4,5].map(n=>`posts/overvintre-sjekkliste-${n}.jpg`),
@@ -635,15 +642,16 @@ function renderPosts(){
   $("#postChips").querySelectorAll("button").forEach(b=>b.onclick=()=>{postCat=b.dataset.c; renderPosts();});
   const list = POSTS.filter(p=>postCat==="alle"||p.cat===postCat);
   $("#posts").innerHTML = list.map(p=>`<button class="post" data-id="${p.id}">
-      <img class="thumb" src="${p.images[0]}" alt="${esc(p.alt?.[0]||L(p.title))}" loading="lazy">
-      <div class="meta"><b style="color:var(--ink)">${esc(L(p.title))}</b><br>${p.images.length} ${t("images")} · ${esc(catName(p.cat))}</div></button>`).join("");
+      <span class="thumbwrap"><img class="thumb" src="${p.video?p.poster:p.images[0]}" alt="${esc(p.alt?.[0]||L(p.title))}" loading="lazy">${p.video?'<span class="play">▶</span>':""}</span>
+      <div class="meta"><b style="color:var(--ink)">${esc(L(p.title))}</b><br>${p.video?"🎬 "+t("video"):p.images.length+" "+t("images")} · ${esc(catName(p.cat))}</div></button>`).join("");
   $("#posts").querySelectorAll(".post").forEach(b=>b.onclick=()=>openPost(b.dataset.id));
 }
 function openPost(id){
   const p = POSTS.find(x=>x.id===id);
   $("#sheet").innerHTML = `<button class="close" aria-label="${t("close")}">×</button>
-    <h2 style="padding-right:40px">${esc(L(p.title))}</h2><span class="es">${esc(p.es)} · ${t("swipe")}</span>
-    <div class="slides">${p.images.map((src,k)=>`<img class="slideimg" src="${src}" alt="${esc(p.alt?.[k]||"")}">`).join("")}</div>
+    <h2 style="padding-right:40px">${esc(L(p.title))}</h2><span class="es">${esc(p.es)}${p.video?"":" · "+t("swipe")}</span>
+    ${p.video ? `<video class="reel" src="${p.video}" poster="${p.poster}" controls playsinline preload="metadata" aria-label="${esc(p.alt?.[0]||"")}"></video>`
+      : `<div class="slides">${p.images.map((src,k)=>`<img class="slideimg" src="${src}" alt="${esc(p.alt?.[k]||"")}">`).join("")}</div>`}
     <div style="display:grid;gap:10px">
       <a class="btn primary" href="#sporsmal">${t("askElena")}</a>
       <a class="btn ghost" href="https://www.instagram.com/${CONFIG.instagram}/" target="_blank" rel="noopener">${t("seeOnIg")}</a>
@@ -652,7 +660,7 @@ function openPost(id){
   $("#sheet .close").onclick = closeModal;
   $("#sheet").querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener("click",closeModal));
 }
-function closeModal(){ $("#modal").classList.remove("on"); }
+function closeModal(){ const v=$("#sheet video"); if(v) v.pause(); $("#modal").classList.remove("on"); }
 $("#modal").addEventListener("click", e=>{ if(e.target.id==="modal") closeModal(); });
 document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeModal(); });
 
