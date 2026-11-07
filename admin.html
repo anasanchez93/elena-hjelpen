@@ -121,7 +121,7 @@ const APP_ADMIN = "https://elenahjelpen.com/admin.html";
 let recovering = false;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-const SERVICES = { video:["Videollamada",40,"30 €"], chat:["Consulta por chat",15,"10 €"], papir:["Ayuda con trámites",30,"45 €"], tolk:["Preparar la cita médica",20,"30 €"] };
+const SERVICES = { video:["Videollamada",40,"30 € / 330 kr"], chat:["Consulta por chat",15,"10 € / 110 kr"], papir:["Ayuda con trámites",30,"45 € / 495 kr"], tolk:["Preparar la cita médica",20,"30 € / 330 kr"] };
 const STATUS = { pendiente:"Pendiente", confirmada:"Confirmada", cancelada:"Cancelada", realizada:"Realizada" };
 let rows = [], tab = "proximas";
 

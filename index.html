@@ -30,10 +30,12 @@ a{color:var(--sea)}
 .app{max-width:560px;margin:0 auto;min-height:100vh;padding:0 16px 110px}
 header.top{display:flex;align-items:center;gap:10px;padding:calc(18px + env(safe-area-inset-top)) 0 10px}
 .logo{width:40px;height:40px;border-radius:50%;background:var(--sea);display:grid;place-items:center;flex:none}
-.brand{font-family:Poppins,sans-serif;font-weight:700;font-size:1.2rem}
+.brand{font-family:Poppins,sans-serif;font-weight:700;font-size:1.15rem;white-space:nowrap;min-width:0}
+.brand small{white-space:normal}
 .brand small{display:block;font-family:"Nunito Sans";font-weight:600;font-size:.78rem;color:var(--muted)}
-.langsw{margin-left:auto;display:flex;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px}
-.langsw button{border:none;background:none;font:inherit;font-weight:800;font-size:.8rem;padding:5px 9px;border-radius:999px;cursor:pointer;color:var(--muted)}
+.switches{margin-left:auto;display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.langsw{display:flex;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px}
+.langsw button{border:none;background:none;font:inherit;font-weight:800;font-size:.78rem;padding:3px 9px;min-width:34px;border-radius:999px;cursor:pointer;color:var(--muted)}
 .langsw button.on{background:var(--sea);color:#fff}
 .sos{background:var(--red);color:#fff;font-weight:800;text-decoration:none;padding:7px 12px;border-radius:999px;font-size:.9rem;white-space:nowrap}
 .view{display:none;animation:fade .25s ease}
@@ -149,8 +151,13 @@ nav.bottom svg{width:24px;height:24px}
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7.5-4.6-9.3-9.4C1.5 8.3 3.6 5 7 5c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 3.4 0 5.5 3.3 4.3 6.6C19.5 16.4 12 21 12 21z" fill="#fff"/><path d="M12 9.5v6M9 12.5h6" stroke="#27375C" stroke-width="2.2" stroke-linecap="round"/></svg>
     </div>
     <div class="brand">Elena hjelpen<small data-i18n="tagline"></small></div>
-    <div class="langsw" role="group" aria-label="Språk / Language">
-      <button data-lang="nb" title="Norsk">NO</button><button data-lang="en" title="English">EN</button>
+    <div class="switches">
+      <div class="langsw" role="group" aria-label="Språk / Language">
+        <button data-lang="nb" title="Norsk">NO</button><button data-lang="en" title="English">EN</button>
+      </div>
+      <div class="langsw" role="group" aria-label="Valuta / Currency">
+        <button data-cur="NOK" title="Norske kroner">kr</button><button data-cur="EUR" title="Euro">€</button>
+      </div>
     </div>
     <a class="sos" href="tel:112" data-i18n-title="sosTitle">☎ 112</a>
   </header>
@@ -271,18 +278,18 @@ const CONFIG = {
   firstFree: true,          // første time gratis
   daysAhead: 21,
   services: [
-    { id: "video", icon: "📹", es: "Videollamada", time: "40 min", price: 30,
+    { id: "video", icon: "📹", es: "Videollamada", time: "40 min", price: 30, nok: 330,
       name: { nb: "Videosamtale", en: "Video call" },
       desc: { nb: "Snakk med Elena om helsevesenet, papirer eller hvor du bør gå.",
               en: "Talk to Elena about the health system, paperwork or where to go." } },
-    { id: "chat", icon: "💬", es: "Consulta por chat", time: "15 min", price: 10,
+    { id: "chat", icon: "💬", es: "Consulta por chat", time: "15 min", price: 10, nok: 110,
       name: { nb: "Chat-konsultasjon", en: "Chat consultation" },
       desc: { nb: "Raske spørsmål på melding til avtalt tid.", en: "Quick questions by message at an agreed time." } },
-    { id: "papir", icon: "📄", es: "Ayuda con trámites", time: "30 min", price: 45,
+    { id: "papir", icon: "📄", es: "Ayuda con trámites", time: "30 min", price: 45, nok: 495,
       name: { nb: "Hjelp med papirer", en: "Help with paperwork" },
       desc: { nb: "SIP-kort, S1, registrering på helsesenter, timebestilling.",
               en: "SIP card, S1 form, registering at a health centre, booking appointments." } },
-    { id: "tolk", icon: "🗣️", es: "Preparar la cita médica", time: "20 min", price: 30,
+    { id: "tolk", icon: "🗣️", es: "Preparar la cita médica", time: "20 min", price: 30, nok: 330,
       name: { nb: "Forberedelse til legetime", en: "Preparing for a doctor's appointment" },
       desc: { nb: "Har du time hos lege i Spania? Før timen går vi sammen gjennom (på video eller chat):",
               en: "Do you have a doctor's appointment in Spain? Before it, we go through together (by video or chat):" },
@@ -360,7 +367,7 @@ const T = {
       <p><b>Konto (valgfritt):</b> oppretter du konto, lagres e-post, navn, telefon og passord (kryptert) for innlogging. Du kan slette kontoen selv under Min side.</p>
       <p><b>Dine rettigheter:</b> du kan be om innsyn, retting eller sletting når som helst ved å kontakte Elena.</p>`,
     firstFreeLong: "<b>Første time er gratis</b> – uansett hvilken type du velger.",
-    step1: "1. Hva trenger du hjelp med?", payVipps: "💳 Du kan betale med <b>Vipps</b>", from: "fra",
+    step1: "1. Hva trenger du hjelp med?", payVipps: "💳 Du kan betale med <b>Vipps</b> (i norske kroner).", from: "fra",
     noDiagnosis: "Elena gir veiledning om helsevesenet – ikke diagnose eller behandling.",
     next: "Neste", back: "Tilbake", step2: "2. Velg dag og tid", slotsLabel: "Ledige tider (spansk tid)", pickDay: "Velg en dag for å se tider.",
     step3: "3. Om deg", bName: "Navn", bContact: "Telefon eller e-post", bFirst: "Er dette første gang du bestiller time hos Elena?",
@@ -439,7 +446,7 @@ const T = {
       <p><b>Account (optional):</b> if you create an account, your email, name, phone and password (encrypted) are stored for login. You can delete the account yourself on My page.</p>
       <p><b>Your rights:</b> you can ask for access, correction or deletion at any time by contacting Elena.</p>`,
     firstFreeLong: "<b>Your first session is free</b> – whichever type you choose.",
-    step1: "1. What do you need help with?", payVipps: "💳 You can pay with <b>Vipps</b>", from: "from",
+    step1: "1. What do you need help with?", payVipps: "💳 You can pay with <b>Vipps</b> (in Norwegian kroner).", from: "from",
     noDiagnosis: "Elena gives guidance about the health system – not diagnosis or treatment.",
     next: "Next", back: "Back", step2: "2. Choose day and time", slotsLabel: "Available times (Spanish time)", pickDay: "Choose a day to see times.",
     step3: "3. About you", bName: "Name", bContact: "Phone or email", bFirst: "Is this your first appointment with Elena?",
@@ -651,6 +658,8 @@ const NAV = [
 
 /* ---------- Språk ---------- */
 let LANG = "nb";
+let CUR = "EUR";
+try { const c = localStorage.getItem("eh-cur"); if (c === "EUR" || c === "NOK") CUR = c; } catch(e) {}
 try { const s = localStorage.getItem("eh-lang"); if (s === "nb" || s === "en") LANG = s; } catch(e) {}
 const t = k => (T[LANG][k] !== undefined ? T[LANG][k] : T.nb[k]);
 const L = x => (x && typeof x === "object" && !Array.isArray(x)) ? (x[LANG] !== undefined ? x[LANG] : x.nb) : x;
@@ -685,6 +694,7 @@ function applyStatic(){
   document.querySelectorAll("[data-i18n-title]").forEach(el => el.title = t(el.dataset.i18nTitle));
   $("#postsLangNote").style.display = t("postsLangNote") ? "block" : "none";
   document.querySelectorAll("[data-lang]").forEach(b => b.classList.toggle("on", b.dataset.lang === LANG));
+  document.querySelectorAll("[data-cur]").forEach(b => b.classList.toggle("on", b.dataset.cur === CUR));
   $("#nav").innerHTML = NAV.map(n=>`<a href="#${n.id}" data-nav="${n.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">${n.svg}</svg>${t("nav")[n.id]}</a>`).join("");
   const sel = $("#qTema"), i = Math.max(0, sel.selectedIndex);
   sel.innerHTML = t("topics").map(x=>`<option>${esc(x)}</option>`).join(""); sel.selectedIndex = i;
@@ -694,6 +704,12 @@ function setLang(l){
   renderAll(); route(false);
 }
 document.querySelectorAll("[data-lang]").forEach(b => b.onclick = () => setLang(b.dataset.lang));
+function setCur(c){
+  CUR = c; try { localStorage.setItem("eh-cur", c); } catch(e) {}
+  document.querySelectorAll("[data-cur]").forEach(b => b.classList.toggle("on", b.dataset.cur === CUR));
+  renderBooking();
+}
+document.querySelectorAll("[data-cur]").forEach(b => b.onclick = () => setCur(b.dataset.cur));
 
 /* ---------- Navigasjon ---------- */
 const VIEWS = ["hjem","innlegg","rad","ordliste","sporsmal","bestill","konto"];
@@ -821,7 +837,7 @@ const dayFull = iso => slotsFor(iso).every(s => isTaken(iso, s));
 const fmtDate = d => LANG === "en"
   ? `${t("daysLong")[d.getDay()]} ${d.getDate()} ${t("months")[d.getMonth()]}`
   : `${t("daysLong")[d.getDay()]} ${d.getDate()}. ${t("months")[d.getMonth()]}`;
-const priceText = s => `${s.from?t("from")+" ":""}${s.price} €`;
+const priceText = s => `${s.from?t("from")+" ":""}${CUR==="NOK" ? s.nok+" kr" : s.price+" €"}`;
 function openPrivacy(){
   $("#sheet").innerHTML = `<button class="close" aria-label="${t("close")}">×</button><h2 style="padding-right:40px">${t("privTitle")}</h2>${t("privText")}`;
   $("#modal").classList.add("on"); $("#sheet .close").onclick = closeModal;
