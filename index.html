@@ -615,7 +615,10 @@ renderBooking();
 renderPosts();
 route();
 if ("serviceWorker" in navigator && location.protocol === "https:") {
-  navigator.serviceWorker.register("sw.js").catch(()=>{});
+  navigator.serviceWorker.register("sw.js", {updateViaCache: "none"}).then(r=>r.update()).catch(()=>{});
+  // Når en ny versjon er installert: last siden på nytt én gang
+  let reloaded=false;
+  navigator.serviceWorker.addEventListener("controllerchange", ()=>{ if(!reloaded){ reloaded=true; location.reload(); } });
 }
 </script>
 </body>
