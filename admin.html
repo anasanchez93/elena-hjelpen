@@ -152,11 +152,12 @@ function render(){
   const today = todayISO();
   const pend = rows.filter(r => r.status === "pendiente" && r.date >= today).length;
   const newQ = questions.filter(q => q.status === "nueva").length;
-  const tabs = [["proximas","Próximas"],["pendientes",`Pendientes${pend?` <span class="count">${pend}</span>`:""}`],["preguntas",`Preguntas${newQ?` <span class="count">${newQ}</span>`:""}`],["historial","Historial"]];
+  const tabs = [["proximas","Próximas"],["pendientes",`Pendientes${pend?` <span class="count">${pend}</span>`:""}`],["preguntas",`Preguntas${newQ?` <span class="count">${newQ}</span>`:""}`],["historial","Historial"],["publicaciones","📸 Publicaciones"]];
   $("#tabs").innerHTML = tabs.map(([k,l]) => `<button class="tab ${tab===k?"on":""}" data-t="${k}">${l}</button>`).join("");
   $("#tabs").querySelectorAll(".tab").forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
 
   if (tab === "preguntas") return renderQuestions();
+  if (tab === "publicaciones") return renderPostsAdmin();
   let list;
   if (tab === "proximas") list = rows.filter(r => r.date >= today && (r.status === "pendiente" || r.status === "confirmada"));
   else if (tab === "pendientes") list = rows.filter(r => r.date >= today && r.status === "pendiente");
@@ -249,7 +250,159 @@ async function load(){
     sb.from("questions").select("*").order("created_at", { ascending: false }),
   ]);
   if (b.error) { alertBox("Error al cargar: " + b.error.message); return; }
-  rows = b.data; questions = q.error ? [] : q.data; render();
+  rows = b.data; questions = q.error ? [] : q.data;
+  if (tab === "publicaciones") return; // no borrar el formulario de publicaciones al actualizar
+  render();
+}
+
+/* ---------- PUBLICACIONES (tabla posts + almacenamiento "posts") ---------- */
+const POST_CATS = ["Vaksine","Helsesenter","Sykehus","Reise","Trening","Apotek","Akutt","Helse"];
+let dbPosts = [], postsErr = "", postBusy = false;
+async function loadPosts(){
+  const { data, error } = await sb.from("posts").select("*").order("created_at", { ascending: false });
+  postsErr = error ? error.message : ""; dbPosts = error ? [] : data;
+}
+const storagePath = url => { const m = String(url||"").split("/object/public/posts/")[1]; return m ? decodeURIComponent(m.split("?")[0]) : null; };
+
+async function renderPostsAdmin(){
+  await loadPosts();
+  const notReady = /posts|relation|schema cache/i.test(postsErr);
+  $("#list").innerHTML = `
+  ${notReady ? `<div class="card err">Falta activar las publicaciones en la base de datos (archivo posts.sql). Error: ${esc(postsErr)}</div>` : ""}
+  <div class="card">
+    <h3>Nueva publicación</h3>
+    <p class="meta">Sube las mismas imágenes o el mismo reel que en Instagram. Aparecen al momento en la sección «Innlegg» de la web.</p>
+    <label>Tipo</label>
+    <div class="row" style="margin-top:0">
+      <label style="font-weight:600;margin:0"><input type="radio" name="pk" value="images" checked style="width:auto"> Carrusel / imágenes</label>
+      <label style="font-weight:600;margin:0"><input type="radio" name="pk" value="video" style="width:auto"> Reel / vídeo</label>
+    </div>
+    <label for="pTnb">Título en noruego *</label><input id="pTnb" maxlength="140" placeholder="Overvintrer du på Costa Blanca? Influensavaksine uten time">
+    <label for="pTen">Título en inglés <span class="meta">(si lo dejas vacío se usa el noruego)</span></label><input id="pTen" maxlength="140">
+    <label for="pTes">Título en español <span class="meta">(se muestra pequeño debajo)</span></label><input id="pTes" maxlength="140">
+    <label for="pCat">Categoría</label>
+    <input id="pCat" list="pCats" value="Vaksine"><datalist id="pCats">${POST_CATS.map(c=>`<option value="${c}">`).join("")}</datalist>
+    <div id="pImgBox">
+      <label for="pImgs">Imágenes (en orden: nómbralas 1, 2, 3…)</label>
+      <input id="pImgs" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+    </div>
+    <div id="pVidBox" style="display:none">
+      <label for="pVid">Vídeo (MP4 o MOV, máximo 50 MB)</label>
+      <input id="pVid" type="file" accept="video/mp4,video/quicktime">
+      <label for="pPoster">Portada <span class="meta">(opcional: si no pones ninguna, se usa un fotograma del vídeo)</span></label>
+      <input id="pPoster" type="file" accept="image/jpeg,image/png,image/webp">
+    </div>
+    <div id="pPrev" class="row"></div>
+    <label for="pAlt">Descripción de cada imagen <span class="meta">(opcional, una línea por imagen; ayuda a personas con lector de pantalla)</span></label>
+    <textarea id="pAlt" rows="3"></textarea>
+    <div class="row"><button class="btn primary" id="pSave">Publicar en la web</button></div>
+    <div class="meta" id="pMsg" style="margin-top:8px"></div>
+  </div>
+  <h3 style="margin-top:20px">Publicadas desde el panel</h3>
+  ${dbPosts.length ? dbPosts.map(p => `<div class="card" data-p="${p.id}">
+      <div class="bk-head" style="align-items:center">
+        <img src="${esc(p.kind==="video" ? (p.poster||"") : p.media[0])}" alt="" style="width:64px;height:80px;object-fit:cover;border-radius:8px;background:var(--sea-2)">
+        <div style="flex:1">
+          <div class="when">${esc(p.title_nb)}</div>
+          <div class="meta">${p.kind==="video" ? "🎬 Reel" : `🖼 ${p.media.length} imágenes`} · ${esc(p.cat)} · ${new Date(p.created_at).toLocaleDateString("es-ES",{day:"numeric",month:"short",year:"numeric"})}</div>
+        </div>
+        <span class="badge ${p.published ? "b-confirmada" : "b-realizada"}">${p.published ? "Visible" : "Oculta"}</span>
+      </div>
+      <div class="row">
+        <button class="btn small" data-pvis>${p.published ? "Ocultar" : "Mostrar"}</button>
+        <button class="btn small no" data-pdel>🗑 Borrar</button>
+      </div></div>`).join("") : `<div class="empty">Todavía no has subido nada desde el panel. Las publicaciones antiguas siguen en la web.</div>`}
+  <p class="meta">Las publicaciones que ya estaban en la web antes del panel no salen aquí; para cambiarlas hay que editar el código.</p>`;
+
+  const kind = () => document.querySelector('input[name="pk"]:checked').value;
+  document.querySelectorAll('input[name="pk"]').forEach(r => r.onchange = () => {
+    $("#pImgBox").style.display = kind()==="images" ? "block" : "none";
+    $("#pVidBox").style.display = kind()==="video" ? "block" : "none"; preview();
+  });
+  const sortedImgs = () => [...$("#pImgs").files].sort((a,b) => a.name.localeCompare(b.name, undefined, { numeric:true }));
+  function preview(){
+    const urls = kind()==="images" ? sortedImgs().map(f => URL.createObjectURL(f)) : [];
+    $("#pPrev").innerHTML = urls.map((u,i) => `<div style="text-align:center"><img src="${u}" style="width:70px;height:88px;object-fit:cover;border-radius:8px"><div class="meta">${i+1}</div></div>`).join("")
+      + (kind()==="video" && $("#pVid").files[0] ? `<div class="meta">🎬 ${esc($("#pVid").files[0].name)} (${($("#pVid").files[0].size/1048576).toFixed(1)} MB)</div>` : "");
+  }
+  $("#pImgs").onchange = preview; $("#pVid").onchange = preview;
+  $("#pSave").onclick = () => savePost(kind(), sortedImgs());
+
+  $("#list").querySelectorAll("[data-p]").forEach(card => {
+    const p = dbPosts.find(x => x.id === card.dataset.p);
+    card.querySelector("[data-pvis]").onclick = async () => {
+      const { error } = await sb.from("posts").update({ published: !p.published }).eq("id", p.id);
+      if (error) alertBox("No se pudo guardar: " + error.message); else renderPostsAdmin();
+    };
+    const del = card.querySelector("[data-pdel]");
+    del.onclick = async () => {
+      if (!del.dataset.sure) { del.dataset.sure = "1"; del.textContent = "¿Seguro? Pulsa otra vez"; return; }
+      const paths = [...p.media, p.poster].map(storagePath).filter(Boolean);
+      if (paths.length) await sb.storage.from("posts").remove(paths);
+      const { error } = await sb.from("posts").delete().eq("id", p.id);
+      if (error) alertBox("No se pudo borrar: " + error.message); else renderPostsAdmin();
+    };
+  });
+}
+
+function frameFromVideo(file){
+  return new Promise(resolve => {
+    const v = document.createElement("video"); v.muted = true; v.playsInline = true; v.preload = "auto";
+    v.src = URL.createObjectURL(file);
+    v.onloadeddata = () => { v.currentTime = Math.min(1, (v.duration || 2) / 2); };
+    v.onseeked = () => {
+      const c = document.createElement("canvas"); c.width = v.videoWidth; c.height = v.videoHeight;
+      c.getContext("2d").drawImage(v, 0, 0); c.toBlob(b => resolve(b), "image/jpeg", 0.85);
+    };
+    v.onerror = () => resolve(null);
+    setTimeout(() => resolve(null), 15000);
+  });
+}
+
+async function savePost(kind, imgs){
+  const msg = t => $("#pMsg").textContent = t;
+  const title_nb = $("#pTnb").value.trim();
+  if (!title_nb) return msg("Escribe al menos el título en noruego.");
+  const vid = $("#pVid").files[0];
+  if (kind === "images" && !imgs.length) return msg("Elige al menos una imagen.");
+  if (kind === "video" && !vid) return msg("Elige el vídeo.");
+  const tooBig = [...imgs, vid, $("#pPoster").files[0]].filter(Boolean).find(f => f.size > 50*1048576);
+  if (tooBig) return msg(`«${tooBig.name}» pesa más de 50 MB. Exporta el vídeo más ligero e inténtalo otra vez.`);
+
+  postBusy = true; $("#pSave").disabled = true;
+  const folder = crypto.randomUUID();
+  const uploaded = [];
+  const up = async (file, name) => {
+    const path = `${folder}/${name}`;
+    const { error } = await sb.storage.from("posts").upload(path, file, { contentType: file.type || "application/octet-stream", cacheControl: "31536000" });
+    if (error) throw error;
+    uploaded.push(path);
+    return sb.storage.from("posts").getPublicUrl(path).data.publicUrl;
+  };
+  const ext = f => (f.name.split(".").pop() || "jpg").toLowerCase();
+  try {
+    let media = [], poster = null;
+    if (kind === "images") {
+      for (let i = 0; i < imgs.length; i++) { msg(`Subiendo imagen ${i+1} de ${imgs.length}…`); media.push(await up(imgs[i], `${i+1}.${ext(imgs[i])}`)); }
+    } else {
+      msg("Subiendo vídeo… (puede tardar un poco)");
+      media.push(await up(vid, `video.${ext(vid) === "mov" ? "mov" : "mp4"}`));
+      let pf = $("#pPoster").files[0];
+      if (!pf) { msg("Creando portada…"); const b = await frameFromVideo(vid); if (b) pf = new File([b], "portada.jpg", { type: "image/jpeg" }); }
+      if (pf) poster = await up(pf, `portada.${ext(pf)}`);
+    }
+    const alt = $("#pAlt").value.split("\n").map(s => s.trim()).filter(Boolean);
+    const { error } = await sb.from("posts").insert({
+      kind, title_nb, title_en: $("#pTen").value.trim() || null, title_es: $("#pTes").value.trim() || null,
+      cat: $("#pCat").value.trim() || "Helse", media, poster, alt: alt.length ? alt : [title_nb]
+    });
+    if (error) throw error;
+    postBusy = false; await renderPostsAdmin(); $("#pMsg").textContent = "✓ Publicado. Ya se ve en la web.";
+  } catch (e) {
+    if (uploaded.length) await sb.storage.from("posts").remove(uploaded);
+    postBusy = false; $("#pSave").disabled = false;
+    msg("No se pudo publicar: " + (e.message || e));
+  }
 }
 
 async function show(){

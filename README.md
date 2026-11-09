@@ -13,3 +13,8 @@ App (PWA) for nordmenn i Spania: innlegg fra Instagram, råd, spansk ordliste, s
 - Pasientkontoer: «Min side» i appen (Supabase Auth). Pasienter ser og avbestiller egne timer (`my_bookings`, `cancel_my_booking`).
 - E-postvarsler: Edge Function `notify` (Gmail SMTP, port 465) kalles av databasen ved ny/bekreftet/avlyst time. Krever secret `GMAIL_APP_PASSWORD`.
 - `vendor/supabase-2.119.0.js` er supabase-js (UMD) lagt inn lokalt.
+
+## Innlegg fra panelet
+- Fanen «📸 Publicaciones» i `admin.html` laster opp bilder/reels til Supabase Storage (bøtte `posts`) og lagrer dem i tabellen `posts`.
+- `index.html` henter publiserte innlegg derfra og viser dem først, foran de faste innleggene i `POSTS`.
+- Databaseoppsettet står i `posts.sql` (kjøres én gang i SQL Editor).

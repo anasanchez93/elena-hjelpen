@@ -1440,6 +1440,27 @@ if(hashErr){ acct.msg = t("aLinkExpired"); location.hash = "konto"; }
 function renderAll(){ applyStatic(); showTip(); renderPosts(); renderGuides(); renderWords(); renderFaq(); renderBooking(); renderAccount(); }
 renderAll();
 route();
+
+/* ---------- Innlegg fra panelet (Supabase, tabell posts) ---------- */
+const STATIC_POSTS = POSTS.slice();
+function mergeRemotePosts(rows){
+  const remote = (rows||[]).map(r => ({
+    id: "db-" + r.id, cat: r.cat || "Helse", es: r.title_es || "",
+    title: { nb: r.title_nb, en: r.title_en || r.title_nb },
+    ...(r.kind === "video" ? { video: r.media[0], poster: r.poster || "" } : { images: r.media }),
+    alt: r.alt || []
+  })).filter(p => p.video || (p.images && p.images.length));
+  POSTS.length = 0; POSTS.push(...remote, ...STATIC_POSTS);
+  renderPosts();
+}
+try { const c = JSON.parse(localStorage.getItem("eh-posts") || "null"); if (Array.isArray(c)) mergeRemotePosts(c); } catch(e) {}
+(async () => {
+  if (!sbc) return;
+  const { data, error } = await sbc.from("posts").select("*").eq("published", true).order("created_at", { ascending: false });
+  if (error) return;
+  try { localStorage.setItem("eh-posts", JSON.stringify(data)); } catch(e) {}
+  mergeRemotePosts(data);
+})();
 if ("serviceWorker" in navigator && location.protocol === "https:") {
   navigator.serviceWorker.register("sw.js", {updateViaCache: "none"}).then(r=>r.update()).catch(()=>{});
   // Når en ny versjon er installert: last siden på nytt én gang
