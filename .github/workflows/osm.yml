@@ -2,7 +2,7 @@ name: Hent helsesteder fra OpenStreetMap
 on:
   workflow_dispatch:
   push:
-    paths: [".github/workflows/osm.yml", "tools/fetch_osm.sh", "tools/build_helse.py"]
+    paths: [".github/workflows/osm.yml", "tools/fetch_osm.sh", "tools/build_helse.py", "tools/official.py"]
   schedule:
     - cron: "17 4 1 * *"
 permissions:
@@ -10,12 +10,13 @@ permissions:
 jobs:
   fetch:
     runs-on: ubuntu-latest
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
       - run: sh tools/fetch_osm.sh
       - run: |
           git config user.name "osm-bot"
           git config user.email "osm-bot@users.noreply.github.com"
-          git add data/osm-raw.json.gz data/helse.json data/offisiell
+          git add data/osm-raw.json.gz data/helse.json data/offisiell data/oficial.json data/geocache.json
           git commit -m "Oppdater helsesteder fra OpenStreetMap" || echo "ingen endringer"
           git pull --rebase -q && git push
