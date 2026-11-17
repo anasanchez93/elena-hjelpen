@@ -41,7 +41,7 @@ def tags_text(t, *keys):
 
 
 PRIV_BRAND = re.compile(r"quir[oó]n|vithas|\bhla\b|\bimed\b|hospiten|juaneda|viamed|\bnisa\b|xanit|medimar|perpetuo socorro|"
-                        r"rotger|sanitas|asisa|teknon|dexeus|corachan|\bhm\b|ruber|recoletas|povisa|nuestra se[ñn]ora del rosario|hospital de barcelona|"
+                        r"rotger|sanitas|asisa|\bimq\b|teknon|dexeus|corachan|\bhm\b|ruber|recoletas|povisa|nuestra se[ñn]ora del rosario|hospital de barcelona|"
                         r"\bhla\b|cl[ií]nica universidad de navarra|vithas|olympia|"
                         r"\bdkv\b|casa de la salud|instituto valenciano de oncolog|san roque|sermesa|"
                         r"san juan de dios|sant joan de d[eé]u|clinic balear|cl[ií]nic balear|policl[ií]nica|cl[ií]nica|clinic\b|"

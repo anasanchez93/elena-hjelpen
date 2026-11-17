@@ -1114,7 +1114,7 @@ document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>location.hash=b.
 
 
 /* ---------- Kart (Leaflet + OpenStreetMap) ---------- */
-const AREAS = { spania:[40.0,-3.7,6], torrevieja:[37.97,-0.70,12], albir:[38.56,-0.08,12], alicante:[38.31,-0.58,11], murcia:[37.85,-1.05,10],
+const AREAS = { spania:[39.8,-3.7,5], torrevieja:[37.97,-0.70,12], albir:[38.56,-0.08,12], alicante:[38.31,-0.58,11], murcia:[37.85,-1.05,10],
   valencia:[39.46,-0.38,12], castellon:[40.1,-0.1,10], almeria:[36.84,-2.46,11], costadelsol:[36.58,-4.68,10], granada:[37.0,-3.6,10],
   sevilla:[37.39,-5.98,11], cadiz:[36.5,-6.1,10], madrid:[40.42,-3.70,11], barcelona:[41.39,2.16,11], costabrava:[41.85,3.0,10],
   tarragona:[41.1,1.15,10], baskland:[43.2,-2.6,9], galicia:[42.7,-8.1,8], asturias:[43.3,-5.0,8], zaragoza:[41.65,-0.88,10],
@@ -1148,11 +1148,12 @@ function drawMap(){
   if (!map.m || !map.data) return;
   if (map.layer) map.layer.remove();
   const rend = LF.canvas({padding:.5});
+  const small = map.m.getZoom() < 9; map.small = small;
   const list = map.data.filter(mapFilter);
   // sykehus tegnes sist, så de ligger øverst
   list.sort((a,b)=> (a[3]==="h") - (b[3]==="h"));
   map.layer = LF.layerGroup(list.map(r => LF.circleMarker([r[1], r[2]], {
-      renderer: rend, radius: r[3]==="h" ? 9 : 6, weight: r[3]==="h" ? 3 : 1.5,
+      renderer: rend, radius: small ? (r[3]==="h" ? 5 : 2.5) : (r[3]==="h" ? 9 : 6), weight: small ? (r[3]==="h" ? 2 : .5) : (r[3]==="h" ? 3 : 1.5),
       color: r[3]==="h" ? "#1F2A37" : "#fff", fillColor: r[4]==="pub" ? "#2563A8" : "#E08A1E", fillOpacity: .95
     }).bindPopup(()=>popupHtml(r), {maxWidth: 260}))).addTo(map.m);
   $("#mapCount").textContent = list.length + " " + t("mapPlaces");
@@ -1193,6 +1194,7 @@ async function initMap(){
     map.m = LF.map("map", {zoomControl: true}).setView([a[0], a[1]], a[2]);
     LF.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map.m);
+    map.m.on("zoomend", () => { if ((map.m.getZoom() < 9) !== map.small) drawMap(); });
     drawMap();
   } catch(e) { console.error(e); $("#map").innerHTML = `<p style="padding:20px">${t("mapErr")}</p>`; }
   map.loading = false;
