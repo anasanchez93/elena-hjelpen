@@ -18,7 +18,9 @@ EXCL_HC = {"dentist", "physiotherapist", "optometrist", "psychotherapist", "podi
            "rehabilitation", "blood_donation", "dialysis", "counselling", "sample_collection", "vaccination_centre"}
 
 PUB_OP = re.compile(r"generalitat|conselleria|conseller[ií]a|servicio andaluz|\bsas\b|servicio murciano|\bsms\b|"
-                    r"servicio canario|\bscs\b|consejer[ií]a|sanidad|ayuntamiento|ajuntament|diputaci[oó]n|"
+                    r"servicio canario|\bscs\b|osakidetza|sergas|servizo galego|sespa|servicio de salud del principado|sacyl|sescam|\bses\b|"
+                    r"servicio aragon[eé]s|servicio navarro|osasunbidea|rioja salud|ib-salut|ib salut|institut catal[aà] de la salut|catsalut|\bics\b|sermas|"
+                    r"servicio madrile|consorci|consejer[ií]a|sanidad|ayuntamiento|ajuntament|diputaci[oó]n|"
                     r"departamento de salud|departament de salut|ag[eè]ncia valenciana|gobierno de canarias|junta de andaluc|"
                     r"ministerio|seguridad social|insalud|servicio de salud|sistema nacional|p[uú]blic|government|"
                     r"comunidad aut[oó]noma|regi[oó]n de murcia|cabildo", re.I)
@@ -39,12 +41,15 @@ def tags_text(t, *keys):
 
 
 PRIV_BRAND = re.compile(r"quir[oó]n|vithas|\bhla\b|\bimed\b|hospiten|juaneda|viamed|\bnisa\b|xanit|medimar|perpetuo socorro|"
-                        r"rotger|sanitas|asisa|\bdkv\b|casa de la salud|instituto valenciano de oncolog|san roque|sermesa|"
+                        r"rotger|sanitas|asisa|teknon|dexeus|corachan|\bhm\b|ruber|recoletas|povisa|nuestra se[ñn]ora del rosario|hospital de barcelona|"
+                        r"\bhla\b|cl[ií]nica universidad de navarra|vithas|olympia|"
+                        r"\bdkv\b|casa de la salud|instituto valenciano de oncolog|san roque|sermesa|"
                         r"san juan de dios|sant joan de d[eé]u|clinic balear|cl[ií]nic balear|policl[ií]nica|cl[ií]nica|clinic\b|"
                         r"centro m[eé]dico|medical|international|internacional|\bhc\b|ochoa|\bhcb\b|ascires|ribera cmv|ribera povisa|"
                         r"victoria eugenia|helicopter", re.I)
 PUB_EXTRA = re.compile(r"ambulatori|centre sanitari|centro sanitario|unidad b[aá]sica de salud|\bubs\b|^urgencias?$|^urg[eè]ncies$|"
-                       r"casa del mar|instituto social de la marina|centro de salud|centre de salut|consultori|^centro salud|^cs |^c\.a\.e\.|^care |centro de alta resoluci|consultas externas", re.I)
+                       r"casa del mar|instituto social de la marina|centro de sa[uú]de|osasun|anbulatorio|centre d.atenci[oó] prim|equip d.atenci[oó]|\beap\b|\bcuap\b|\babs\b|"
+                       r"punto de atenci[oó]n continuada|\bpac\b|centro de salud|centre de salut|consultori|^centro salud|^cs |^c\.a\.e\.|^care |centro de alta resoluci|consultas externas", re.I)
 
 
 def classify(t):

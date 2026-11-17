@@ -354,7 +354,7 @@ const T = {
     mapNoLoc: "Fant ikke posisjonen din. Tillat posisjon i innstillingene.", mapNearTitle: "Nærmest deg", mapPlaces: "steder", mapRoute: "🧭 Veibeskrivelse", mapCall: "📞 Ring", mapWeb: "🌐 Nettside",
     mapKindH: "Sykehus", mapKindC: "Helsesenter / klinikk", mapUrgTag: "Akutt", mapPrivInfo: "Privat: krever forsikring eller betaling.", mapPubInfo: "Offentlig: ta med helsekort (SIP/EU-kort).",
     mapNote: "Kilde: OpenStreetMap. Listen kan være ufullstendig – ring gjerne før du drar. Ved nødstilfelle: ring 112.",
-    mapAreas: [["torrevieja","Torrevieja / Orihuela Costa"],["albir","Albir / Altea / Benidorm"],["alicante","Alicante / Elche"],["murcia","Murcia / Mar Menor"],["valencia","Valencia"],["almeria","Almería"],["costadelsol","Costa del Sol"],["granada","Granada / Costa Tropical"],["grancanaria","Gran Canaria"],["tenerife","Tenerife"],["lanzarote","Lanzarote / Fuerteventura"],["mallorca","Mallorca / Baleares"]],
+    mapAreas: [["spania","🇪🇸 Hele Spania"],["torrevieja","Torrevieja / Orihuela Costa"],["albir","Albir / Altea / Benidorm"],["alicante","Alicante / Elche"],["murcia","Murcia / Mar Menor"],["valencia","Valencia"],["castellon","Castellón"],["almeria","Almería"],["costadelsol","Costa del Sol / Málaga"],["granada","Granada / Costa Tropical"],["sevilla","Sevilla"],["cadiz","Cádiz / Costa de la Luz"],["madrid","Madrid"],["barcelona","Barcelona"],["costabrava","Girona / Costa Brava"],["tarragona","Tarragona / Costa Daurada"],["baskland","Bilbao / San Sebastián"],["galicia","Galicia"],["asturias","Asturias / Cantabria"],["zaragoza","Zaragoza"],["castillaleon","Castilla y León"],["castillamancha","Castilla-La Mancha"],["extremadura","Extremadura"],["navarra","Navarra / La Rioja"],["mallorca","Mallorca / Menorca"],["ibiza","Ibiza / Formentera"],["grancanaria","Gran Canaria"],["tenerife","Tenerife / La Gomera / La Palma"],["lanzarote","Lanzarote / Fuerteventura"]],
     heroTitle: "Hei! Jeg er <em>Elena</em> 👋",
     heroText: "Sykepleier i Spania. Jeg hjelper deg å forstå det spanske helsevesenet – enten du er på ferie eller bor her.",
     heroBtn: "Bestill en time med meg", firstFreeShort: "🎁 Første time er gratis",
@@ -445,7 +445,7 @@ const T = {
     mapNoLoc: "Could not find your location. Allow location in your settings.", mapNearTitle: "Closest to you", mapPlaces: "places", mapRoute: "🧭 Directions", mapCall: "📞 Call", mapWeb: "🌐 Website",
     mapKindH: "Hospital", mapKindC: "Health centre / clinic", mapUrgTag: "Emergency", mapPrivInfo: "Private: requires insurance or payment.", mapPubInfo: "Public: bring your health card (SIP/EHIC).",
     mapNote: "Source: OpenStreetMap. The list may be incomplete – consider calling before you go. In an emergency: call 112.",
-    mapAreas: [["torrevieja","Torrevieja / Orihuela Costa"],["albir","Albir / Altea / Benidorm"],["alicante","Alicante / Elche"],["murcia","Murcia / Mar Menor"],["valencia","Valencia"],["almeria","Almería"],["costadelsol","Costa del Sol"],["granada","Granada / Costa Tropical"],["grancanaria","Gran Canaria"],["tenerife","Tenerife"],["lanzarote","Lanzarote / Fuerteventura"],["mallorca","Mallorca / Baleares"]],
+    mapAreas: [["spania","🇪🇸 All of Spain"],["torrevieja","Torrevieja / Orihuela Costa"],["albir","Albir / Altea / Benidorm"],["alicante","Alicante / Elche"],["murcia","Murcia / Mar Menor"],["valencia","Valencia"],["castellon","Castellón"],["almeria","Almería"],["costadelsol","Costa del Sol / Málaga"],["granada","Granada / Costa Tropical"],["sevilla","Sevilla"],["cadiz","Cádiz / Costa de la Luz"],["madrid","Madrid"],["barcelona","Barcelona"],["costabrava","Girona / Costa Brava"],["tarragona","Tarragona / Costa Daurada"],["baskland","Bilbao / San Sebastián"],["galicia","Galicia"],["asturias","Asturias / Cantabria"],["zaragoza","Zaragoza"],["castillaleon","Castilla y León"],["castillamancha","Castilla-La Mancha"],["extremadura","Extremadura"],["navarra","Navarra / La Rioja"],["mallorca","Mallorca / Menorca"],["ibiza","Ibiza / Formentera"],["grancanaria","Gran Canaria"],["tenerife","Tenerife / La Gomera / La Palma"],["lanzarote","Lanzarote / Fuerteventura"]],
     heroTitle: "Hi! I'm <em>Elena</em> 👋",
     heroText: "A nurse in Spain. I help you understand the Spanish health system – whether you're on holiday or living here.",
     heroBtn: "Book an appointment with me", firstFreeShort: "🎁 Your first session is free",
@@ -1114,9 +1114,12 @@ document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>location.hash=b.
 
 
 /* ---------- Kart (Leaflet + OpenStreetMap) ---------- */
-const AREAS = { torrevieja:[37.97,-0.70,12], albir:[38.56,-0.08,12], alicante:[38.31,-0.58,11], murcia:[37.85,-1.05,10],
-  valencia:[39.46,-0.38,12], almeria:[36.84,-2.46,11], costadelsol:[36.58,-4.68,10], granada:[37.0,-3.6,10],
-  grancanaria:[27.93,-15.55,10], tenerife:[28.28,-16.55,10], lanzarote:[28.75,-13.85,9], mallorca:[39.6,2.95,9] };
+const AREAS = { spania:[40.0,-3.7,6], torrevieja:[37.97,-0.70,12], albir:[38.56,-0.08,12], alicante:[38.31,-0.58,11], murcia:[37.85,-1.05,10],
+  valencia:[39.46,-0.38,12], castellon:[40.1,-0.1,10], almeria:[36.84,-2.46,11], costadelsol:[36.58,-4.68,10], granada:[37.0,-3.6,10],
+  sevilla:[37.39,-5.98,11], cadiz:[36.5,-6.1,10], madrid:[40.42,-3.70,11], barcelona:[41.39,2.16,11], costabrava:[41.85,3.0,10],
+  tarragona:[41.1,1.15,10], baskland:[43.2,-2.6,9], galicia:[42.7,-8.1,8], asturias:[43.3,-5.0,8], zaragoza:[41.65,-0.88,10],
+  castillaleon:[41.65,-4.6,7], castillamancha:[39.4,-3.3,7], extremadura:[39.2,-6.2,7], navarra:[42.6,-1.9,8],
+  mallorca:[39.6,2.95,9], ibiza:[38.95,1.4,10], grancanaria:[27.93,-15.55,10], tenerife:[28.28,-16.55,10], lanzarote:[28.75,-13.85,9] };
 let LF = null; // Leaflet (L brukes allerede til språk)
 const map = { sector:"alle", kind:"alle", area:"torrevieja", data:null, m:null, layer:null, me:null, loading:false };
 try { const a = localStorage.getItem("eh-area"); if (AREAS[a]) map.area = a; } catch(e) {}
