@@ -5,15 +5,16 @@ import gzip, json, re, sys
 
 raw = json.load(gzip.open("data/osm-raw.json.gz", "rt"))
 
-EXCLUDE = re.compile(r"dent|odontolog|veterin|fisio|physio|est[eé]tic|aesthetic|podolog|[oó]ptic|optic|psicolog|psycholog|"
+EXCLUDE = re.compile(r"veterin|fisio|physio|est[eé]tic|aesthetic|podolog|[oó]ptic|optic|psicolog|psycholog|"
                      r"laborator|farmacia|pharmac|logoped|audio|nutrici|dermoest|capilar|hair|botox|beauty|belleza|"
                      r"osteop|quiropr|chiropr|acupunt|massag|masaje|tattoo|vet\b|animal|mascota|rehabilit|reconocimiento|"
                      r"psiqui|fertilidad|reproducci|ivi\b|ginefiv|cirug[ií]a pl[aá]stica|centro de d[ií]a|residencia|geri[aá]tric|"
                      r"mutua|fremap|asepeyo|ibermutua|umivale|mc mutual|solimat|donaci[oó]n|transfusi|hemodi[aá]lisis|di[aá]lisis|"
                      r"prevenci[oó]n|drogodepend|adicci|ucad|uca\b|salud mental|usm\b|conductas adictivas|planificaci[oó]n familiar|"
                      r"centro de salud sexual|crema|sanatorio animal|psiqu?[aá]tric|cruz roja|creu roja|red cross|dorsia|bernabeu|"
-                     r"naval hospital|mútua|^metge$|^(torre|edificio|edifici|pabell[oó]n|bloque|m[oó]dulo|planta) ", re.I)
-EXCL_HC = {"dentist", "physiotherapist", "optometrist", "psychotherapist", "podiatrist", "laboratory", "pharmacy",
+                     r"naval hospital|l[aá]ser|depila|rejuvene|anti.?aging|antienvejec|\bspa\b|u[ñn]as|nails|medicina est|cirug[ií]a est|"
+                     r"pod[oó]log|podiatr|quiropod|mútua|^metge$|^(torre|edificio|edifici|pabell[oó]n|bloque|m[oó]dulo|planta) ", re.I)
+EXCL_HC = {"physiotherapist", "optometrist", "psychotherapist", "podiatrist", "laboratory", "pharmacy",
            "alternative", "audiologist", "speech_therapist", "occupational_therapist", "nutrition_counselling",
            "rehabilitation", "blood_donation", "dialysis", "counselling", "sample_collection", "vaccination_centre"}
 
@@ -54,6 +55,8 @@ PUB_EXTRA = re.compile(r"ambulatori|centre sanitari|centro sanitario|unidad b[a�
 
 def classify(t):
     name0 = t.get("name", "")
+    if is_dent(t):
+        return "pub" if re.search(r"salud bucodental|salut bucodental|\busbd\b|unidad de odontolog[ií]a|centro de salud|centre de salut|consultorio", name0, re.I) else "priv"
     if re.search(r"san juan de dios del aljarafe", name0, re.I):
         return "pub"
     if PRIV_BRAND.search(name0):
@@ -81,8 +84,18 @@ def classify(t):
     return None
 
 
+DENT = re.compile(r"dent|odontolog|bucodental|ortodonc|implant|sonris|smile|dental|endodonc|periodonc", re.I)
+
+
+def is_dent(t):
+    return t.get("amenity") == "dentist" or t.get("healthcare") == "dentist" or "dentistry" in t.get("healthcare:speciality", "") \
+        or (DENT.search(t.get("name", "")) and t.get("amenity") != "hospital")
+
+
 def kind(t):
     n = t.get("name", "")
+    if is_dent(t):
+        return "d"
     if re.search(r"centro de salud|centre de salut|consultori|centro m[eé]dico|centre m[eè]dic|center of medical|^asisa$|"
                  r"^cs |^centro salud|^c\.a\.e\.|centro de especialidades|centre d.especialitats|\bubs\b|unidad b[aá]sica|ambulatori|centro asistencial|^cl[ií]nica|policl[ií]nica|dua clinic", n, re.I) \
        and not re.search(r"hospital", n, re.I):
@@ -106,7 +119,7 @@ for prov, els in raw.items():
         name = (t.get("name") or t.get("name:es") or "").strip()
         if not name:
             continue
-        if t.get("healthcare") in EXCL_HC or t.get("healthcare:speciality", "").split(";")[0] in ("dentistry", "physiotherapy", "veterinary", "ophthalmology", "psychiatry", "dermatology"):
+        if t.get("healthcare") in EXCL_HC or t.get("healthcare:speciality", "").split(";")[0] in ("physiotherapy", "veterinary", "ophthalmology", "psychiatry", "dermatology"):
             continue
         if EXCLUDE.search(name) or EXCLUDE.search(t.get("healthcare:speciality", "")):
             continue

@@ -8,14 +8,14 @@ UA="Mozilla/5.0 (elenahjelpen.com)"
 for u in https://www.sanidad.gob.es/estadEstudios/estadisticas/docs/siap/2026_C_Catal_Centros_AP.xlsx \
          https://www.sanidad.gob.es/estadEstudios/estadisticas/docs/siap/2026_C_Catal_disp_urg.xlsx \
          https://www.sanidad.gob.es/estadEstudios/estadisticas/sisInfSanSNS/ofertaRecursos/hospitales/docs/CNH_2025.xlsx; do
-  curl -sfL --retry 3 -A "$UA" -o "data/offisiell/$(basename $u)" "$u" || echo "FEIL: $u"
+  curl -sfL --retry 2 -m 180 -A "$UA" -o "data/offisiell/$(basename $u)" "$u" || echo "FEIL: $u"
 done
 ls -l data/offisiell
 fetch(){ curl -sfL --retry 3 -o "/tmp/osm/$1.pbf" "$2"; ls -l "/tmp/osm/$1.pbf"; }
 fetch spania https://download.geofabrik.de/europe/spain-latest.osm.pbf
 fetch canarias https://download.geofabrik.de/africa/canary-islands-latest.osm.pbf
 for R in spania canarias; do
-  osmium tags-filter "/tmp/osm/$R.pbf" nwr/amenity=hospital,clinic,doctors nwr/healthcare=hospital,clinic,centre -o "/tmp/osm/$R-h.pbf" --overwrite
+  osmium tags-filter "/tmp/osm/$R.pbf" nwr/amenity=hospital,clinic,doctors,dentist nwr/healthcare=hospital,clinic,centre,dentist -o "/tmp/osm/$R-h.pbf" --overwrite
   osmium export "/tmp/osm/$R-h.pbf" -f geojsonseq -o "/tmp/osm/$R.geojsonseq" --overwrite
 done
 python3 - <<'PY'

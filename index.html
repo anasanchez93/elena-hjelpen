@@ -359,7 +359,7 @@ const T = {
     tagline: "Helsehjelp for skandinaver i Spania", sosTitle: "Nødnummer 112",
     mapSearchPh: "Adresse, postnummer eller sted", mapSearchBtn: "🔍 Søk", mapSearching: "Søker …", mapNoHits: "Fant ingen treff. Prøv f.eks. «Calle Mayor 10, Torrevieja» eller «03181».",
     mapNearAddr: "Nærmest adressen", mapPlace: "Helsested",
-    mapTitle: "Kart over helsetilbud", mapAll: "Alle", mapPub: "Offentlig", mapPriv: "Privat", mapHosp: "🏥 Sykehus", mapCentre: "🩺 Helsesentre", mapUrg: "🚑 Akutt / legevakt",
+    mapTitle: "Kart over helsetilbud", mapAll: "Alle", mapPub: "Offentlig", mapPriv: "Privat", mapHosp: "🏥 Sykehus", mapCentre: "🩺 Helsesentre", mapDent: "🦷 Tannlege", mapKindD: "Tannlege", mapUrg: "🚑 Akutt / legevakt",
     mapHospOne: "Sykehus (stor prikk)", mapLocate: "📍 Nærmest meg", mapLoading: "Laster kart …", mapErr: "Kunne ikke laste kartet. Sjekk nettforbindelsen.",
     mapNoLoc: "Fant ikke posisjonen din. Tillat posisjon i innstillingene.", mapNearTitle: "Nærmest deg", mapPlaces: "steder", mapRoute: "🧭 Veibeskrivelse", mapCall: "📞 Ring", mapWeb: "🌐 Nettside",
     mapKindH: "Sykehus", mapKindC: "Helsesenter / klinikk", mapUrgTag: "Akutt", mapPrivInfo: "Privat: krever forsikring eller betaling.", mapPubInfo: "Offentlig: ta med helsekort (SIP/EU-kort).",
@@ -452,7 +452,7 @@ const T = {
     tagline: "Health help for Scandinavians in Spain", sosTitle: "Emergency number 112",
     mapSearchPh: "Address, postcode or town", mapSearchBtn: "🔍 Search", mapSearching: "Searching …", mapNoHits: "No results. Try e.g. «Calle Mayor 10, Torrevieja» or «03181».",
     mapNearAddr: "Closest to the address", mapPlace: "Health service",
-    mapTitle: "Map of health services", mapAll: "All", mapPub: "Public", mapPriv: "Private", mapHosp: "🏥 Hospitals", mapCentre: "🩺 Health centres", mapUrg: "🚑 Emergency",
+    mapTitle: "Map of health services", mapAll: "All", mapPub: "Public", mapPriv: "Private", mapHosp: "🏥 Hospitals", mapCentre: "🩺 Health centres", mapDent: "🦷 Dentists", mapKindD: "Dentist", mapUrg: "🚑 Emergency",
     mapHospOne: "Hospital (large dot)", mapLocate: "📍 Near me", mapLoading: "Loading map …", mapErr: "Could not load the map. Check your connection.",
     mapNoLoc: "Could not find your location. Allow location in your settings.", mapNearTitle: "Closest to you", mapPlaces: "places", mapRoute: "🧭 Directions", mapCall: "📞 Call", mapWeb: "🌐 Website",
     mapKindH: "Hospital", mapKindC: "Health centre / clinic", mapUrgTag: "Emergency", mapPrivInfo: "Private: requires insurance or payment.", mapPubInfo: "Public: bring your health card (SIP/EHIC).",
@@ -1140,7 +1140,7 @@ function renderMapChips(){
   const mk = (id, cur, opts, set) => { $(id).innerHTML = opts.map(([k,l])=>`<button class="chip ${cur===k?"on":""}" data-k="${k}">${esc(l)}</button>`).join("");
     $(id).querySelectorAll("button").forEach(b=>b.onclick=()=>{ set(b.dataset.k); renderMapChips(); drawMap(); }); };
   mk("#mapSector", map.sector, [["alle",t("mapAll")],["pub",t("mapPub")],["priv",t("mapPriv")]], v=>map.sector=v);
-  mk("#mapKind", map.kind, [["alle",t("mapAll")],["h",t("mapHosp")],["c",t("mapCentre")],["u",t("mapUrg")]], v=>map.kind=v);
+  mk("#mapKind", map.kind, [["alle",t("mapAll")],["h",t("mapHosp")],["c",t("mapCentre")],["u",t("mapUrg")],["d",t("mapDent")]], v=>map.kind=v);
   $("#mapArea").innerHTML = t("mapAreas").map(([k,l])=>`<option value="${k}" ${k===map.area?"selected":""}>${esc(l)}</option>`).join("");
 }
 $("#mapArea").onchange = e => { map.area = e.target.value; try{localStorage.setItem("eh-area", map.area);}catch(_){}
@@ -1151,7 +1151,7 @@ function popupHtml(r){
   const link = web && /^https?:\/\//.test(web) ? web : (web ? "https://" + web : "");
   return `<div class="mpop"><b>${esc(name)}</b><br>
     <span class="tag ${sec}">${t(sec==="pub"?"mapPub":"mapPriv")} · ${sec==="pub"?"Público":"Privado"}</span>${urg?`<span class="tag urg">${t("mapUrgTag")}</span>`:""}
-    <div>${t(kind==="h"?"mapKindH":"mapKindC")}</div>${adr?`<div>${esc(adr)}</div>`:""}
+    <div>${t(kind==="h"?"mapKindH":kind==="d"?"mapKindD":"mapKindC")}</div>${adr?`<div>${esc(adr)}</div>`:""}
     <div style="margin:4px 0;color:#5E6B7A;font-size:.85em">${t(sec==="pub"?"mapPubInfo":"mapPrivInfo")}</div>
     <div style="margin-top:6px"><a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" rel="noopener">${t("mapRoute")}</a>
     ${tel?`<a href="tel:${esc(tel.replace(/[^+\d]/g,""))}">${t("mapCall")}</a>`:""}${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${t("mapWeb")}</a>`:""}</div></div>`;
@@ -1165,7 +1165,7 @@ function drawMap(){
   // sykehus tegnes sist, så de ligger øverst
   list.sort((a,b)=> (a[3]==="h") - (b[3]==="h"));
   map.layer = LF.layerGroup(list.map(r => LF.circleMarker([r[1], r[2]], {
-      renderer: rend, radius: small ? (r[3]==="h" ? 5 : 2.5) : (r[3]==="h" ? 9 : 6), weight: small ? (r[3]==="h" ? 2 : .5) : (r[3]==="h" ? 3 : 1.5),
+      renderer: rend, radius: small ? (r[3]==="h" ? 5 : r[3]==="d" ? 1.8 : 2.5) : (r[3]==="h" ? 9 : r[3]==="d" ? 4.5 : 6), weight: small ? (r[3]==="h" ? 2 : .5) : (r[3]==="h" ? 3 : 1.5),
       color: r[3]==="h" ? "#1F2A37" : "#fff", fillColor: r[4]==="pub" ? "#2563A8" : "#E08A1E", fillOpacity: .95
     }).bindPopup(()=>popupHtml(r), {maxWidth: 260}))).addTo(map.m);
   $("#mapCount").textContent = list.length + " " + t("mapPlaces");
@@ -1176,9 +1176,9 @@ function km(a, b, c, d){ const R=6371, x=(c-a)*Math.PI/180, y=(d-b)*Math.PI/180;
 function renderNear(){
   if (!map.me || !map.data) { $("#mapNear").innerHTML = ""; return; }
   const [la, lo] = map.me;
-  const near = map.data.filter(mapFilter).map(r => [km(la, lo, r[1], r[2]), r]).sort((a,b)=>a[0]-b[0]).slice(0, 6);
+  const near = map.data.filter(r => mapFilter(r) && (map.kind==="d" || r[3]!=="d")).map(r => [km(la, lo, r[1], r[2]), r]).sort((a,b)=>a[0]-b[0]).slice(0, 6);
   $("#mapNear").innerHTML = `<div class="card" style="padding:6px 16px"><h3 style="margin:10px 0 4px">${t(map.meAddr ? "mapNearAddr" : "mapNearTitle")}</h3>` +
-    near.map(([d, r], i) => `<div class="near" data-i="${i}"><div><b>${esc(r[0])}</b><br><small>${t(r[3]==="h"?"mapKindH":"mapKindC")} · ${t(r[4]==="pub"?"mapPub":"mapPriv")}${r[5]?" · "+t("mapUrgTag"):""}</small></div><div class="km">${d<10?d.toFixed(1):Math.round(d)} km</div></div>`).join("") + `</div>`;
+    near.map(([d, r], i) => `<div class="near" data-i="${i}"><div><b>${esc(r[0])}</b><br><small>${t(r[3]==="h"?"mapKindH":r[3]==="d"?"mapKindD":"mapKindC")} · ${t(r[4]==="pub"?"mapPub":"mapPriv")}${r[5]?" · "+t("mapUrgTag"):""}</small></div><div class="km">${d<10?d.toFixed(1):Math.round(d)} km</div></div>`).join("") + `</div>`;
   $("#mapNear").querySelectorAll(".near").forEach(el => el.onclick = () => { const r = near[+el.dataset.i][1];
     map.m.setView([r[1], r[2]], 15); LF.popup({maxWidth:260}).setLatLng([r[1], r[2]]).setContent(popupHtml(r)).openOn(map.m); $("#map").scrollIntoView({behavior:"smooth", block:"center"}); });
 }
@@ -1210,7 +1210,7 @@ $("#mapSearch").addEventListener("submit", async e => {
   const box = $("#mapResults");
   box.innerHTML = `<p class="es" style="margin:0 2px 10px">${t("mapSearching")}</p>`;
   const nq = norm(q);
-  const own = map.data.filter(r => norm(r[0]).includes(nq)).slice(0, 4).map(r => ({lat:r[1], lon:r[2], name:r[0], sub:t(r[3]==="h"?"mapKindH":"mapKindC") + " · " + t(r[4]==="pub"?"mapPub":"mapPriv"), row:r}));
+  const own = map.data.filter(r => norm(r[0]).includes(nq)).slice(0, 4).map(r => ({lat:r[1], lon:r[2], name:r[0], sub:t(r[3]==="h"?"mapKindH":r[3]==="d"?"mapKindD":"mapKindC") + " · " + t(r[4]==="pub"?"mapPub":"mapPriv"), row:r}));
   let addr = [];
   try {
     const u = "https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=es&limit=5&accept-language=es&q=" + encodeURIComponent(q);
