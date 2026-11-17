@@ -2,7 +2,15 @@
 # Henter sykehus og helsesentre fra OpenStreetMap (Geofabrik-uttrekk) og lager data/helse.json
 set -e
 sudo apt-get install -y -qq osmium-tool >/dev/null
-mkdir -p /tmp/osm data
+mkdir -p /tmp/osm data data/offisiell
+# Offisielle kataloger fra Ministerio de Sanidad (offentlige helsesentre, legevakter, alle sykehus med eierform)
+UA="Mozilla/5.0 (elenahjelpen.com)"
+for u in https://www.sanidad.gob.es/estadEstudios/estadisticas/docs/siap/2026_C_Catal_Centros_AP.xlsx \
+         https://www.sanidad.gob.es/estadEstudios/estadisticas/docs/siap/2026_C_Catal_disp_urg.xlsx \
+         https://www.sanidad.gob.es/estadEstudios/estadisticas/sisInfSanSNS/ofertaRecursos/hospitales/docs/CNH_2025.xlsx; do
+  curl -sfL --retry 3 -A "$UA" -o "data/offisiell/$(basename $u)" "$u" || echo "FEIL: $u"
+done
+ls -l data/offisiell
 fetch(){ curl -sfL --retry 3 -o "/tmp/osm/$1.pbf" "$2"; ls -l "/tmp/osm/$1.pbf"; }
 fetch spania https://download.geofabrik.de/europe/spain-latest.osm.pbf
 fetch canarias https://download.geofabrik.de/africa/canary-islands-latest.osm.pbf
