@@ -10,8 +10,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          for q in "Calle Urbano Arregui 6, 03185 Torrevieja" "Torrevieja, Alicante"; do
-            curl -s -m 30 -w "\n%{http_code} %{time_total}\n" -A "elenahjelpen.com kart" "https://www.cartociudad.es/geocoder/api/geocoder/findJsonp?q=$(python3 -c 'import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))' "$q")" >> /tmp/t.txt 2>&1
+          enc(){ python3 -c 'import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))' "$1"; }
+          for q in "Calle Urbano Arregui, 6, Torrevieja, Alicante" "calle urbano arregui 6, torrevieja" "Urbano Arregui 6, Torrevieja" "Calle Patricio Pérez 36, Torrevieja" "Avenida de Holanda 51, Torrevieja" "Calle Alpujarras, Almería"; do
+            echo "== $q" >> /tmp/t.txt
+            curl -s -m 30 -A "elenahjelpen.com" "https://www.cartociudad.es/geocoder/api/geocoder/findJsonp?q=$(enc "$q")" | cut -c1-300 >> /tmp/t.txt; echo >> /tmp/t.txt
+            curl -s -m 30 -A "elenahjelpen.com" "https://www.cartociudad.es/geocoder/api/geocoder/candidatesJsonp?limit=2&q=$(enc "$q")" | cut -c1-600 >> /tmp/t.txt; echo >> /tmp/t.txt
           done
           mkdir -p data && cp /tmp/t.txt data/geotest.txt
           git config user.name osm-bot; git config user.email osm-bot@users.noreply.github.com
