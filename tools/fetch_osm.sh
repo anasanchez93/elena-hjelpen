@@ -11,9 +11,8 @@ for u in https://www.sanidad.gob.es/estadEstudios/estadisticas/docs/siap/2026_C_
   curl -sfL --retry 2 -m 180 -A "$UA" -o "data/offisiell/$(basename $u)" "$u" || echo "FEIL: $u"
 done
 ls -l data/offisiell
-fetch(){ curl -sfL --retry 3 -o "/tmp/osm/$1.pbf" "$2"; ls -l "/tmp/osm/$1.pbf"; }
-fetch spania https://download.geofabrik.de/europe/spain-latest.osm.pbf
-fetch canarias https://download.geofabrik.de/africa/canary-islands-latest.osm.pbf
+fetch(){ curl -sfL --retry 6 --retry-delay 20 --retry-all-errors -o "/tmp/osm/$1.pbf" "$2"; ls -l "/tmp/osm/$1.pbf"; }
+if fetch spania https://download.geofabrik.de/europe/spain-latest.osm.pbf && fetch canarias https://download.geofabrik.de/africa/canary-islands-latest.osm.pbf; then
 for R in spania canarias; do
   osmium tags-filter "/tmp/osm/$R.pbf" nwr/amenity=hospital,clinic,doctors,dentist nwr/healthcare=hospital,clinic,centre,dentist -o "/tmp/osm/$R-h.pbf" --overwrite
   osmium export "/tmp/osm/$R-h.pbf" -f geojsonseq -o "/tmp/osm/$R.geojsonseq" --overwrite
@@ -41,6 +40,9 @@ for R in ["spania", "canarias"]:
 print({k: len(v) for k, v in out.items()})
 json.dump(out, gzip.open("data/osm-raw.json.gz", "wt"), ensure_ascii=False)
 PY
+else
+  echo "Geofabrik utilgjengelig – bruker forrige OSM-uttrekk"
+fi
 pip install -q --break-system-packages openpyxl || pip install -q openpyxl
 python3 tools/official.py
 python3 tools/build_helse.py -v | head -120
