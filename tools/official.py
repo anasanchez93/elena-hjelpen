@@ -66,10 +66,15 @@ def geocode(q):
                 txt = r.read().decode("utf-8", "replace")
             m = re.search(r"\((.*)\)\s*;?\s*$", txt, re.S)
             j = json.loads(m.group(1) if m else txt)
-            if j and j.get("lat") and j.get("lng"):
-                res = [round(float(j["lat"]), 6), round(float(j["lng"]), 6), str(j.get("type") or ""), norm(j.get("muni") or "")]
-            else:
-                res = None
+            res = None
+            if j:
+                la, lo = float(j.get("lat") or 0), float(j.get("lng") or 0)
+                if not (la and lo) and j.get("geom"):
+                    pts = re.findall(r"(-?\d+\.\d+) (-?\d+\.\d+)", j["geom"])
+                    if pts and not str(j["geom"]).startswith("MULTIPOLYGON") and not str(j["geom"]).startswith("POLYGON"):
+                        lo, la = map(float, pts[len(pts) // 2])
+                if la and lo:
+                    res = [round(la, 6), round(lo, 6), str(j.get("type") or ""), norm(j.get("muni") or ""), j.get("portalNumber")]
             cache[q] = res
             return res
         except Exception as e:
@@ -80,9 +85,16 @@ def geocode(q):
 def locate(addr, cp, loc, muni, prov):
     """Prøv adresse+postnummer+sted, så adresse+kommune, og sjekk at treffet ligger i riktig kommune."""
     a = clean_addr(addr)
+    a = re.sub(r",\s*(\d+[A-Z]?)\b", r" \1", a)          # «Calle X, 6» -> «Calle X 6»
+    a = re.sub(r"\s*-\s*(urb|urbanizaci[oó]n|bajo|local|edificio|esquina|pda|partida)\b.*$", "", a, flags=re.I)
     tries = []
     if a:
-        tries += [f"{a}, {cp or ''} {loc or muni}".strip(), f"{a}, {muni}, {prov}"]
+        towns = []
+        for x in [loc] + re.split(r"/", str(muni or "")):
+            x = re.sub(r"\s*\((.*)\)$", lambda m: "", str(x or "")).strip()
+            if x and x.lower() not in [t.lower() for t in towns]:
+                towns.append(x)
+        tries += [f"{a}, {t}" for t in towns]
     for q in tries:
         g = geocode(q)
         if g and g[2] not in ("Municipio", "municipio", "poblacion", "Poblacion", "provincia", "comunidad autonoma"):
@@ -126,7 +138,7 @@ def main():
         g = locate(rec["addr"], rec["cp"], rec["loc"], rec["muni"], rec["prov"])
         if g:
             rec["lat"], rec["lon"], rec["prec"] = g
-        a = geocode(f"{rec['muni']}, {rec['prov']}")
+        a = geocode(str(rec["muni"]).split("/")[0])
         if a:
             rec["anchor"] = [a[0], a[1]]
         return rec
