@@ -41,6 +41,6 @@ for R in ["spania", "canarias"]:
 print({k: len(v) for k, v in out.items()})
 json.dump(out, gzip.open("data/osm-raw.json.gz", "wt"), ensure_ascii=False)
 PY
-pip install -q openpyxl
+pip install -q --break-system-packages openpyxl || pip install -q openpyxl
 python3 tools/official.py
 python3 tools/build_helse.py -v | head -120
