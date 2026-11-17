@@ -6,13 +6,13 @@ import gzip, json, re, sys
 raw = json.load(gzip.open("data/osm-raw.json.gz", "rt"))
 
 EXCLUDE = re.compile(r"veterin|fisio|physio|est[eé]tic|aesthetic|podolog|[oó]ptic|optic|psicolog|psycholog|"
-                     r"laborator|farmacia|pharmac|logoped|audio|nutrici|dermoest|capilar|hair|botox|beauty|belleza|"
-                     r"osteop|quiropr|chiropr|acupunt|massag|masaje|tattoo|vet\b|animal|mascota|rehabilit|reconocimiento|"
+                     r"laborator|farmacia|pharmac|logoped|audio|nutrici|dermoest|capilar|\bhair\b|botox|beauty|belleza|"
+                     r"osteop|quiropr|chiropr|acupunt|massag|masaje|tattoo|\bvet\b|animal|mascota|rehabilit|reconocimiento|"
                      r"psiqui|fertilidad|reproducci|ivi\b|ginefiv|cirug[ií]a pl[aá]stica|centro de d[ií]a|residencia|geri[aá]tric|"
                      r"mutua|fremap|asepeyo|ibermutua|umivale|mc mutual|solimat|donaci[oó]n|transfusi|hemodi[aá]lisis|di[aá]lisis|"
                      r"prevenci[oó]n|drogodepend|adicci|ucad|uca\b|salud mental|usm\b|conductas adictivas|planificaci[oó]n familiar|"
-                     r"centro de salud sexual|crema|sanatorio animal|psiqu?[aá]tric|cruz roja|creu roja|red cross|dorsia|bernabeu|"
-                     r"naval hospital|l[aá]ser|depila|rejuvene|anti.?aging|antienvejec|\bspa\b|u[ñn]as|nails|medicina est|cirug[ií]a est|"
+                     r"centro de salud sexual|\bcrema\b|sanatorio animal|psiqu?[aá]tric|cruz roja|creu roja|red cross|dorsia|bernabeu|"
+                     r"naval hospital|l[aá]ser|depila|rejuvene|anti.?aging|antienvejec|\bspa\b|\bu[ñn]as\b|nails|medicina est|cirug[ií]a est|"
                      r"pod[oó]log|podiatr|quiropod|mútua|^metge$|^(torre|edificio|edifici|pabell[oó]n|bloque|m[oó]dulo|planta) ", re.I)
 EXCL_HC = {"physiotherapist", "optometrist", "psychotherapist", "podiatrist", "laboratory", "pharmacy",
            "alternative", "audiologist", "speech_therapist", "occupational_therapist", "nutrition_counselling",
@@ -180,7 +180,7 @@ def near(lat, lon, r_km):
                     yield d, o
 
 
-def best_match(rec, lat, lon, r_km, want_h):
+def best_match(rec, lat, lon, r_km, want_h, anchor=False):
     """Finn OSM-punktet som er samme sted som den offisielle oppføringen."""
     town = toks(rec.get("muni")) | toks(rec.get("loc")) | toks(rec.get("prov"))
     rt = toks(rec["raw"], town)
@@ -194,7 +194,7 @@ def best_match(rec, lat, lon, r_km, want_h):
             score = d - 2 * len(shared)
         elif d < 0.15 and (o["pubname"] or (want_h and o["k"] == "h")) and not PRIV_BRAND.search(o["name"]):
             score = d + 1
-        elif not rt and d < 0.6 and o["pubname"] and (toks(o["name"]) <= town or not toks(o["name"])):
+        elif not rt and d < (r_km if anchor else 0.6) and (o["pubname"] or (want_h and o["k"] == "h")) and not PRIV_BRAND.search(o["name"]) and (toks(o["name"]) <= town or not toks(o["name"])):
             score = d + 0.5   # «Consultorio de Algar» i landsbyen Algar
         if score is not None and (best is None or score < best[0]):
             best = (score, o)
@@ -207,12 +207,15 @@ out, missing = [], []
 placed = []
 for rec in off:
     lat, lon = rec.get("lat"), rec.get("lon")
+    if lat is not None and (rec.get("prec") in ("expendeduria", "punto_recarga_electrica", "ngbe")
+                            or (rec.get("anchor") and km(lat, lon, *rec["anchor"]) > 40)):
+        lat = lon = None   # geokoderen traff feil sted
     want_h = rec["src"] == "h"
     m = None
     if lat is not None:
         m = best_match(rec, lat, lon, 0.4 if rec.get("prec") == "portal" else 2.5, want_h)
     elif rec.get("anchor"):
-        m = best_match(rec, rec["anchor"][0], rec["anchor"][1], 12, want_h)
+        m = best_match(rec, rec["anchor"][0], rec["anchor"][1], 12, want_h, anchor=True)
         if m and not (toks(rec["raw"], toks(rec["muni"]) | toks(rec["loc"])) & m["tok"]) and not m["pubname"]:
             m = None
     if m:
@@ -280,7 +283,14 @@ for o in osm:
         k = "d"
     else:
         if o["pubname"] or o["guess"] == "pub":
-            dropped += 1          # offentlig sted som allerede finnes i den offisielle katalogen
+            if near_official(o, 0.3) or not o["pubname"]:
+                dropped += 1      # finnes allerede i den offisielle katalogen
+                continue
+            # Offentlig etter navnet («Centro de Salud …», «Hospital Universitario …»), men ikke funnet i katalogen ved adressen
+            phone = (t.get("phone") or t.get("contact:phone") or "").split(";")[0].strip()
+            web = (t.get("website") or t.get("contact:website") or "").split(";")[0].strip()
+            k = "h" if o["k"] == "h" and re.search(r"hospital|complejo|complexo|hospitalari", name, re.I) else "c"
+            out.append([name, round(o["lat"], 5), round(o["lon"], 5), k, "pub", 1 if (k == "h" or t.get("emergency") == "yes") else 0, addr(t), phone, web, ""])
             continue
         if o["guess"] != "priv" and not PRIV_BRAND.search(name):
             continue              # vet ikke hva det er – tas ikke med
@@ -298,5 +308,5 @@ from collections import Counter
 print(len(out), Counter((r[3], r[4]) for r in out))
 print("offisielle uten posisjon:", len(missing), Counter(r["src"] for r in missing), "| OSM offentlige droppet:", dropped)
 if "-v" in sys.argv:
-    for r in missing[:200]:
+    for r in sorted(missing, key=lambda r: r["src"] != "h")[:150]:
         print("  MISSING", r["src"], r["name"], "|", r.get("addr"), r.get("muni"))

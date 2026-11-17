@@ -138,7 +138,14 @@ def main():
         g = locate(rec["addr"], rec["cp"], rec["loc"], rec["muni"], rec["prov"])
         if g:
             rec["lat"], rec["lon"], rec["prec"] = g
-        a = geocode(str(rec["muni"]).split("/")[0])
+        mu = re.sub(r"^(.*), (A|O|El|La|Las|Los|L'|Les|Els|Es|Sa|Ses)$", r"\2 \1", str(rec["muni"]).split("/")[0].strip())
+        a = None
+        for q in (f"{mu}, {rec['prov']}", mu):
+            g = geocode(q)
+            if g and g[2].lower() in ("municipio", "poblacion"):
+                a = g
+                break
+        a = a or geocode(mu)
         if a:
             rec["anchor"] = [a[0], a[1]]
         return rec
