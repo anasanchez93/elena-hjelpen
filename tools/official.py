@@ -6,7 +6,8 @@ Resultat: data/oficial.json. Geokoding lagres i data/geocache.json, så bare nye
 """
 import json, os, re, sys, time, unicodedata, urllib.parse, urllib.request
 from concurrent.futures import ThreadPoolExecutor
-import openpyxl
+import openpyxl, threading
+LOCK = threading.Lock()
 
 D = "data/offisiell/"
 OFFLINE = "--offline" in sys.argv
@@ -75,7 +76,8 @@ def geocode(q):
                         lo, la = map(float, pts[len(pts) // 2])
                 if la and lo:
                     res = [round(la, 6), round(lo, 6), str(j.get("type") or ""), norm(j.get("muni") or ""), j.get("portalNumber")]
-            cache[q] = res
+            with LOCK:
+                cache[q] = res
             return res
         except Exception as e:
             time.sleep(2 + attempt * 3)
@@ -102,6 +104,12 @@ def locate(addr, cp, loc, muni, prov):
             if not gm or gm[:5] in mm or mm[:5] in gm or any(p[:5] in gm for p in re.split(r"[/ ]", mm) if len(p) > 3):
                 return g[0], g[1], g[2]
     return None
+
+
+def save_cache():
+    with LOCK:
+        snap = dict(cache)
+    json.dump(snap, open(CACHE_F, "w"), ensure_ascii=False, separators=(",", ":"))
 
 
 def main():
@@ -154,12 +162,15 @@ def main():
         for i, _ in enumerate(ex.map(job, recs)):
             if i % 1000 == 0:
                 print(i, "/", len(recs), flush=True)
-                json.dump(cache, open(CACHE_F, "w"), ensure_ascii=False, separators=(",", ":"))
-    json.dump(cache, open(CACHE_F, "w"), ensure_ascii=False, separators=(",", ":"))
+                save_cache()
+    save_cache()
     json.dump(recs, open("data/oficial.json", "w"), ensure_ascii=False, separators=(",", ":"))
     from collections import Counter
     print(Counter((r["src"], "lat" in r) for r in recs))
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    finally:
+        save_cache()
