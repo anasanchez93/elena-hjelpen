@@ -1,0 +1,18 @@
+name: Test geokoder
+on:
+  push:
+    paths: [".github/workflows/test.yml"]
+permissions:
+  contents: write
+jobs:
+  t:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          for q in "Calle Urbano Arregui 6, 03185 Torrevieja" "Torrevieja, Alicante"; do
+            curl -s -m 30 -w "\n%{http_code} %{time_total}\n" -A "elenahjelpen.com kart" "https://www.cartociudad.es/geocoder/api/geocoder/findJsonp?q=$(python3 -c 'import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))' "$q")" >> /tmp/t.txt 2>&1
+          done
+          mkdir -p data && cp /tmp/t.txt data/geotest.txt
+          git config user.name osm-bot; git config user.email osm-bot@users.noreply.github.com
+          git add data/geotest.txt; git commit -m "geotest"; git pull --rebase -q; git push
