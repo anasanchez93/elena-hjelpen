@@ -136,6 +136,9 @@ label{font-weight:800;font-size:.92rem;display:block;margin:12px 0 6px}
 #map{height:58vh;min-height:320px;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#e8eef0;z-index:1}
 .maptools{display:flex;gap:8px;margin-bottom:10px}
 .maptools select{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:9px 10px;font:inherit;font-weight:700;background:#fff;color:var(--ink)}
+.maptools input{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:9px 12px;font:inherit;background:#fff;color:var(--ink)}
+#mapResults .card{padding:4px 14px;margin-bottom:10px}#mapResults button{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 0;font:inherit;color:var(--ink);cursor:pointer}
+#mapResults button:last-child{border-bottom:0}#mapResults small{color:var(--muted)}
 .maptools .btn{margin:0;white-space:nowrap;padding:9px 12px}
 .maplegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem;color:var(--muted);margin:10px 2px}
 .maplegend .dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
@@ -261,6 +264,11 @@ nav.bottom svg{width:24px;height:24px}
     <p class="es" style="margin-bottom:10px">Mapa de centros de salud y hospitales públicos y privados</p>
     <div class="chips" id="mapSector"></div>
     <div class="chips" id="mapKind"></div>
+    <form class="maptools" id="mapSearch">
+      <input id="mapQ" type="search" autocomplete="street-address" data-i18n-ph="mapSearchPh" data-i18n-aria="mapSearchPh">
+      <button class="btn primary" type="submit" data-i18n="mapSearchBtn"></button>
+    </form>
+    <div id="mapResults"></div>
     <div class="maptools">
       <select id="mapArea" aria-label="Område"></select>
       <button class="btn ghost" id="mapLocate" data-i18n="mapLocate"></button>
@@ -349,6 +357,8 @@ const CONFIG = {
 const T = {
   nb: {
     tagline: "Helsehjelp for skandinaver i Spania", sosTitle: "Nødnummer 112",
+    mapSearchPh: "Adresse, postnummer eller sted", mapSearchBtn: "🔍 Søk", mapSearching: "Søker …", mapNoHits: "Fant ingen treff. Prøv f.eks. «Calle Mayor 10, Torrevieja» eller «03181».",
+    mapNearAddr: "Nærmest adressen", mapPlace: "Helsested",
     mapTitle: "Kart over helsetilbud", mapAll: "Alle", mapPub: "Offentlig", mapPriv: "Privat", mapHosp: "🏥 Sykehus", mapCentre: "🩺 Helsesentre", mapUrg: "🚑 Akutt / legevakt",
     mapHospOne: "Sykehus (stor prikk)", mapLocate: "📍 Nærmest meg", mapLoading: "Laster kart …", mapErr: "Kunne ikke laste kartet. Sjekk nettforbindelsen.",
     mapNoLoc: "Fant ikke posisjonen din. Tillat posisjon i innstillingene.", mapNearTitle: "Nærmest deg", mapPlaces: "steder", mapRoute: "🧭 Veibeskrivelse", mapCall: "📞 Ring", mapWeb: "🌐 Nettside",
@@ -440,6 +450,8 @@ const T = {
   },
   en: {
     tagline: "Health help for Scandinavians in Spain", sosTitle: "Emergency number 112",
+    mapSearchPh: "Address, postcode or town", mapSearchBtn: "🔍 Search", mapSearching: "Searching …", mapNoHits: "No results. Try e.g. «Calle Mayor 10, Torrevieja» or «03181».",
+    mapNearAddr: "Closest to the address", mapPlace: "Health service",
     mapTitle: "Map of health services", mapAll: "All", mapPub: "Public", mapPriv: "Private", mapHosp: "🏥 Hospitals", mapCentre: "🩺 Health centres", mapUrg: "🚑 Emergency",
     mapHospOne: "Hospital (large dot)", mapLocate: "📍 Near me", mapLoading: "Loading map …", mapErr: "Could not load the map. Check your connection.",
     mapNoLoc: "Could not find your location. Allow location in your settings.", mapNearTitle: "Closest to you", mapPlaces: "places", mapRoute: "🧭 Directions", mapCall: "📞 Call", mapWeb: "🌐 Website",
@@ -1165,7 +1177,7 @@ function renderNear(){
   if (!map.me || !map.data) { $("#mapNear").innerHTML = ""; return; }
   const [la, lo] = map.me;
   const near = map.data.filter(mapFilter).map(r => [km(la, lo, r[1], r[2]), r]).sort((a,b)=>a[0]-b[0]).slice(0, 6);
-  $("#mapNear").innerHTML = `<div class="card" style="padding:6px 16px"><h3 style="margin:10px 0 4px">${t("mapNearTitle")}</h3>` +
+  $("#mapNear").innerHTML = `<div class="card" style="padding:6px 16px"><h3 style="margin:10px 0 4px">${t(map.meAddr ? "mapNearAddr" : "mapNearTitle")}</h3>` +
     near.map(([d, r], i) => `<div class="near" data-i="${i}"><div><b>${esc(r[0])}</b><br><small>${t(r[3]==="h"?"mapKindH":"mapKindC")} · ${t(r[4]==="pub"?"mapPub":"mapPriv")}${r[5]?" · "+t("mapUrgTag"):""}</small></div><div class="km">${d<10?d.toFixed(1):Math.round(d)} km</div></div>`).join("") + `</div>`;
   $("#mapNear").querySelectorAll(".near").forEach(el => el.onclick = () => { const r = near[+el.dataset.i][1];
     map.m.setView([r[1], r[2]], 15); LF.popup({maxWidth:260}).setLatLng([r[1], r[2]]).setContent(popupHtml(r)).openOn(map.m); $("#map").scrollIntoView({behavior:"smooth", block:"center"}); });
@@ -1173,13 +1185,49 @@ function renderNear(){
 $("#mapLocate").onclick = () => {
   if (!navigator.geolocation) return toast(t("mapNoLoc"));
   navigator.geolocation.getCurrentPosition(p => {
-    map.me = [p.coords.latitude, p.coords.longitude];
+    map.me = [p.coords.latitude, p.coords.longitude]; map.meAddr = false;
     if (map.m) { if (map.meMarker) map.meMarker.remove();
       map.meMarker = LF.circleMarker(map.me, {radius: 8, color: "#fff", weight: 3, fillColor: "#C0392B", fillOpacity: 1}).addTo(map.m);
       map.m.setView(map.me, 13); }
     renderNear();
   }, () => toast(t("mapNoLoc")), {enableHighAccuracy: true, timeout: 10000});
 };
+
+/* Søk på adresse (Nominatim/OpenStreetMap) og på navn i egne data */
+function setPoint(lat, lon, label){
+  map.me = [lat, lon]; map.meAddr = true;
+  if (map.meMarker) map.meMarker.remove();
+  map.meMarker = LF.circleMarker(map.me, {radius: 9, color: "#fff", weight: 3, fillColor: "#C0392B", fillOpacity: 1}).addTo(map.m);
+  if (label) map.meMarker.bindTooltip(label).openTooltip();
+  map.m.setView(map.me, 14); renderNear();
+}
+$("#mapSearch").addEventListener("submit", async e => {
+  e.preventDefault();
+  const q = $("#mapQ").value.trim(); if (!q) return;
+  $("#mapQ").blur();
+  if (!map.m) await initMap();
+  if (!map.m) return;
+  const box = $("#mapResults");
+  box.innerHTML = `<p class="es" style="margin:0 2px 10px">${t("mapSearching")}</p>`;
+  const nq = norm(q);
+  const own = map.data.filter(r => norm(r[0]).includes(nq)).slice(0, 4).map(r => ({lat:r[1], lon:r[2], name:r[0], sub:t(r[3]==="h"?"mapKindH":"mapKindC") + " · " + t(r[4]==="pub"?"mapPub":"mapPriv"), row:r}));
+  let addr = [];
+  try {
+    const u = "https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=es&limit=5&accept-language=es&q=" + encodeURIComponent(q);
+    const res = await fetch(u, {headers: {"Accept": "application/json"}});
+    if (res.ok) addr = (await res.json()).map(a => ({lat:+a.lat, lon:+a.lon, name:a.display_name.split(",").slice(0,2).join(","), sub:a.display_name.split(",").slice(2,5).join(",")}));
+  } catch(_) {}
+  const all = [...addr, ...own];
+  if (!all.length) { box.innerHTML = `<p class="es" style="margin:0 2px 10px">${t("mapNoHits")}</p>`; return; }
+  if (all.length === 1 || (addr.length === 1 && !own.length)) { box.innerHTML = ""; pick(all[0]); return; }
+  box.innerHTML = `<div class="card">` + all.map((a,i)=>`<button type="button" data-i="${i}">${a.row?"🏥 ":"📍 "}<b>${esc(a.name)}</b><br><small>${esc(a.sub||"")}</small></button>`).join("") + `</div>`;
+  box.querySelectorAll("button").forEach(b => b.onclick = () => { box.innerHTML = ""; pick(all[+b.dataset.i]); });
+  function pick(a){
+    if (a.row) { map.m.setView([a.lat, a.lon], 16); LF.popup({maxWidth:260}).setLatLng([a.lat, a.lon]).setContent(popupHtml(a.row)).openOn(map.m); }
+    else setPoint(a.lat, a.lon, a.name);
+    $("#map").scrollIntoView({behavior:"smooth", block:"center"});
+  }
+});
 async function initMap(){
   renderMapChips();
   if (map.m) { setTimeout(()=>map.m.invalidateSize(), 50); return; }
