@@ -17,6 +17,9 @@ jobs:
       - run: |
           git config user.name "osm-bot"
           git config user.email "osm-bot@users.noreply.github.com"
+          mkdir -p /tmp/gen && cp -r data /tmp/gen/
+          git fetch -q origin main && git reset -q --hard origin/main
+          cp -r /tmp/gen/data/. data/
           git add data/osm-raw.json.gz data/helse.json data/offisiell data/oficial.json data/geocache.json
-          git commit -m "Oppdater helsesteder fra OpenStreetMap" || echo "ingen endringer"
-          git pull --rebase -q && git push
+          git commit -m "Oppdater helsesteder (Ministerio de Sanidad + OpenStreetMap)" || echo "ingen endringer"
+          git push
