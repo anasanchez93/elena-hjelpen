@@ -18,3 +18,7 @@ App (PWA) for nordmenn i Spania: innlegg fra Instagram, råd, spansk ordliste, s
 - Fanen «📸 Publicaciones» i `admin.html` laster opp bilder/reels til Supabase Storage (bøtte `posts`) og lagrer dem i tabellen `posts`.
 - `index.html` henter publiserte innlegg derfra og viser dem først, foran de faste innleggene i `POSTS`.
 - Databaseoppsettet står i `posts.sql` (kjøres én gang i SQL Editor).
+
+## Kart over helsetilbud
+- Fanen «Kart» viser sykehus og helsesentre (offentlige og private) med Leaflet (`vendor/leaflet/`) og kartfliser fra OpenStreetMap.
+- Dataene ligger i `data/helse.json`. GitHub Action `osm.yml` henter dem fra OpenStreetMap (Geofabrik) den 1. i hver måned og kjører `tools/build_helse.py`, som sorterer i offentlig/privat.

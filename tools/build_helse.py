@@ -11,7 +11,8 @@ EXCLUDE = re.compile(r"dent|odontolog|veterin|fisio|physio|est[eé]tic|aesthetic
                      r"psiqui|fertilidad|reproducci|ivi\b|ginefiv|cirug[ií]a pl[aá]stica|centro de d[ií]a|residencia|geri[aá]tric|"
                      r"mutua|fremap|asepeyo|ibermutua|umivale|mc mutual|solimat|donaci[oó]n|transfusi|hemodi[aá]lisis|di[aá]lisis|"
                      r"prevenci[oó]n|drogodepend|adicci|ucad|uca\b|salud mental|usm\b|conductas adictivas|planificaci[oó]n familiar|"
-                     r"centro de salud sexual|crema|sanatorio animal", re.I)
+                     r"centro de salud sexual|crema|sanatorio animal|psiqu?[aá]tric|cruz roja|creu roja|red cross|dorsia|bernabeu|"
+                     r"naval hospital|mútua|^metge$|^(torre|edificio|edifici|pabell[oó]n|bloque|m[oó]dulo|planta) ", re.I)
 EXCL_HC = {"dentist", "physiotherapist", "optometrist", "psychotherapist", "podiatrist", "laboratory", "pharmacy",
            "alternative", "audiologist", "speech_therapist", "occupational_therapist", "nutrition_counselling",
            "rehabilitation", "blood_donation", "dialysis", "counselling", "sample_collection", "vaccination_centre"}
@@ -37,7 +38,21 @@ def tags_text(t, *keys):
     return " ".join(t.get(k, "") for k in keys)
 
 
+PRIV_BRAND = re.compile(r"quir[oó]n|vithas|\bhla\b|\bimed\b|hospiten|juaneda|viamed|\bnisa\b|xanit|medimar|perpetuo socorro|"
+                        r"rotger|sanitas|asisa|\bdkv\b|casa de la salud|instituto valenciano de oncolog|san roque|sermesa|"
+                        r"san juan de dios|sant joan de d[eé]u|clinic balear|cl[ií]nic balear|policl[ií]nica|cl[ií]nica|clinic\b|"
+                        r"centro m[eé]dico|medical|international|internacional|\bhc\b|ochoa|\bhcb\b|ascires|ribera cmv|ribera povisa|"
+                        r"victoria eugenia|helicopter", re.I)
+PUB_EXTRA = re.compile(r"ambulatori|centre sanitari|centro sanitario|unidad b[aá]sica de salud|\bubs\b|^urgencias?$|^urg[eè]ncies$|"
+                       r"casa del mar|instituto social de la marina|centro de salud|centre de salut|consultori|^centro salud|^cs |^c\.a\.e\.|^care |centro de alta resoluci|consultas externas", re.I)
+
+
 def classify(t):
+    name0 = t.get("name", "")
+    if re.search(r"san juan de dios del aljarafe", name0, re.I):
+        return "pub"
+    if PRIV_BRAND.search(name0):
+        return "priv"
     ot = t.get("operator:type", "").lower()
     name = t.get("name", "")
     op = tags_text(t, "operator", "operator:es", "brand", "network")
@@ -53,12 +68,20 @@ def classify(t):
                  r"cl[ií]nica|clinic|policl[ií]nica|centro m[eé]dico|medical|m[eé]dico\b|international|internacional|"
                  r"sanitas|asisa|dkv|\bhc\b|ochoa|helicopter", name, re.I):
         return "priv"
-    if PUB_NAME.search(name):
+    if PUB_NAME.search(name) or PUB_EXTRA.search(name):
+        return "pub"
+    # Sykehus uten privat merkenavn er nesten alltid offentlige
+    if (t.get("amenity") == "hospital" or t.get("healthcare") == "hospital") and re.match(r"(hospital|hospitalet|complejo hospitalario|complex hospitalari)\b", name, re.I):
         return "pub"
     return None
 
 
 def kind(t):
+    n = t.get("name", "")
+    if re.search(r"centro de salud|centre de salut|consultori|centro m[eé]dico|centre m[eè]dic|center of medical|^asisa$|"
+                 r"^cs |^centro salud|^c\.a\.e\.|centro de especialidades|centre d.especialitats|\bubs\b|unidad b[aá]sica|ambulatori|centro asistencial|^cl[ií]nica|policl[ií]nica|dua clinic", n, re.I) \
+       and not re.search(r"hospital", n, re.I):
+        return "c"
     if t.get("amenity") == "hospital" or t.get("healthcare") == "hospital":
         return "h"
     return "c"
@@ -98,6 +121,8 @@ for prov, els in raw.items():
             continue
         seen.add(key)
         urg = 1 if t.get("emergency") == "yes" or re.search(r"urgencia|\bpac\b|\bsuap\b|atenci[oó]n continuada|\bsnu\b|\bseu\b|\bdccu\b", name, re.I) else 0
+        if k == "h" and s == "pub" and not re.search(r"de d[ií]a|par[aá]lisis|cr[oó]nicos|media estancia|consultas externas", name, re.I):
+            urg = 1  # offentlige sykehus har akuttmottak
         phone = t.get("phone") or t.get("contact:phone") or ""
         web = t.get("website") or t.get("contact:website") or ""
         out.append([name, round(lat, 5), round(lon, 5), k, s, urg, addr(t), phone.split(";")[0].strip(), web.split(";")[0].strip()])

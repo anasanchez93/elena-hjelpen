@@ -133,6 +133,21 @@ label{font-weight:800;font-size:.92rem;display:block;margin:12px 0 6px}
 .check{display:flex;gap:10px;align-items:flex-start;font-weight:600;font-size:.92rem;margin-top:12px}
 .check input{width:auto;margin-top:4px}
 /* nav */
+#map{height:58vh;min-height:320px;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#e8eef0;z-index:1}
+.maptools{display:flex;gap:8px;margin-bottom:10px}
+.maptools select{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:9px 10px;font:inherit;font-weight:700;background:#fff;color:var(--ink)}
+.maptools .btn{margin:0;white-space:nowrap;padding:9px 12px}
+.maplegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem;color:var(--muted);margin:10px 2px}
+.maplegend .dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.dot.pub{background:#2563A8}.dot.priv{background:#E08A1E}.dot.big{width:15px;height:15px;background:#fff;border:3px solid var(--ink)}
+.maplegend .es{display:inline;margin:0 0 0 3px}
+.mapnote{font-size:.82rem;color:var(--muted);margin-top:10px}
+.mpop b{font-size:1rem}.mpop .tag{display:inline-block;border-radius:999px;padding:2px 8px;font-size:.75rem;font-weight:800;color:#fff;margin:4px 4px 4px 0}
+.mpop .tag.pub{background:#2563A8}.mpop .tag.priv{background:#E08A1E}.mpop .tag.urg{background:#C0392B}
+.mpop a{font-weight:800;margin-right:10px}
+.near{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.near:last-child{border-bottom:0}.near small{color:var(--muted)}.near .km{font-weight:800;white-space:nowrap}
+nav.bottom a{font-size:.68rem;white-space:nowrap}
 nav.bottom{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center;z-index:40;padding-bottom:env(safe-area-inset-bottom)}
 nav.bottom .in{display:flex;max-width:560px;width:100%}
 nav.bottom a{flex:1;text-align:center;padding:9px 2px 10px;font-size:.74rem;font-weight:800;color:var(--muted);text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:3px}
@@ -240,6 +255,27 @@ nav.bottom svg{width:24px;height:24px}
   </section>
 
   <!-- MIN SIDE -->
+  <!-- KART -->
+  <section class="view" id="v-kart">
+    <h2 data-i18n="mapTitle"></h2>
+    <p class="es" style="margin-bottom:10px">Mapa de centros de salud y hospitales públicos y privados</p>
+    <div class="chips" id="mapSector"></div>
+    <div class="chips" id="mapKind"></div>
+    <div class="maptools">
+      <select id="mapArea" aria-label="Område"></select>
+      <button class="btn ghost" id="mapLocate" data-i18n="mapLocate"></button>
+    </div>
+    <div id="map"><p style="padding:20px" data-i18n="mapLoading"></p></div>
+    <div class="maplegend">
+      <span><i class="dot pub"></i><span data-i18n="mapPub"></span> <span class="es">Público</span></span>
+      <span><i class="dot priv"></i><span data-i18n="mapPriv"></span> <span class="es">Privado</span></span>
+      <span><i class="dot big"></i><span data-i18n="mapHospOne"></span></span>
+      <span id="mapCount"></span>
+    </div>
+    <div id="mapNear"></div>
+    <p class="mapnote" data-i18n="mapNote"></p>
+  </section>
+
   <section class="view" id="v-konto">
     <h2 data-i18n="acctTitle"></h2>
     <p class="es" style="margin-bottom:12px">Mis citas</p>
@@ -313,6 +349,12 @@ const CONFIG = {
 const T = {
   nb: {
     tagline: "Helsehjelp for skandinaver i Spania", sosTitle: "Nødnummer 112",
+    mapTitle: "Kart over helsetilbud", mapAll: "Alle", mapPub: "Offentlig", mapPriv: "Privat", mapHosp: "🏥 Sykehus", mapCentre: "🩺 Helsesentre", mapUrg: "🚑 Akutt / legevakt",
+    mapHospOne: "Sykehus (stor prikk)", mapLocate: "📍 Nærmest meg", mapLoading: "Laster kart …", mapErr: "Kunne ikke laste kartet. Sjekk nettforbindelsen.",
+    mapNoLoc: "Fant ikke posisjonen din. Tillat posisjon i innstillingene.", mapNearTitle: "Nærmest deg", mapPlaces: "steder", mapRoute: "🧭 Veibeskrivelse", mapCall: "📞 Ring", mapWeb: "🌐 Nettside",
+    mapKindH: "Sykehus", mapKindC: "Helsesenter / klinikk", mapUrgTag: "Akutt", mapPrivInfo: "Privat: krever forsikring eller betaling.", mapPubInfo: "Offentlig: ta med helsekort (SIP/EU-kort).",
+    mapNote: "Kilde: OpenStreetMap. Listen kan være ufullstendig – ring gjerne før du drar. Ved nødstilfelle: ring 112.",
+    mapAreas: [["torrevieja","Torrevieja / Orihuela Costa"],["albir","Albir / Altea / Benidorm"],["alicante","Alicante / Elche"],["murcia","Murcia / Mar Menor"],["valencia","Valencia"],["almeria","Almería"],["costadelsol","Costa del Sol"],["granada","Granada / Costa Tropical"],["grancanaria","Gran Canaria"],["tenerife","Tenerife"],["lanzarote","Lanzarote / Fuerteventura"],["mallorca","Mallorca / Baleares"]],
     heroTitle: "Hei! Jeg er <em>Elena</em> 👋",
     heroText: "Sykepleier i Spania. Jeg hjelper deg å forstå det spanske helsevesenet – enten du er på ferie eller bor her.",
     heroBtn: "Bestill en time med meg", firstFreeShort: "🎁 Første time er gratis",
@@ -391,13 +433,19 @@ const T = {
     days: ["søn","man","tir","ons","tor","fre","lør"],
     daysLong: ["søndag","mandag","tirsdag","onsdag","torsdag","fredag","lørdag"],
     months: ["januar","februar","mars","april","mai","juni","juli","august","september","oktober","november","desember"],
-    nav: { hjem:"Hjem", innlegg:"Innlegg", rad:"Råd", sporsmal:"Spør", bestill:"Time", konto:"Min side" },
+    nav: { hjem:"Hjem", innlegg:"Innlegg", rad:"Råd", kart:"Kart", sporsmal:"Spør", bestill:"Time", konto:"Min side" },
     cats: { Trening:"Trening", Reise:"Reise", Vaksine:"Vaksine", Helsesenter:"Helsesenter", Sykehus:"Sykehus",
             Akutt:"Akutt", Symptomer:"Symptomer", "Hos legen":"Hos legen", Apotek:"Apotek", Papirer:"Papirer",
             Kroppen:"Kroppen", Sykdommer:"Sykdommer", "Undersøkelser":"Undersøkelser", Tannlege:"Tannlege", "Gravid og barn":"Gravid og barn", "Nyttige fraser":"Nyttige fraser" }
   },
   en: {
     tagline: "Health help for Scandinavians in Spain", sosTitle: "Emergency number 112",
+    mapTitle: "Map of health services", mapAll: "All", mapPub: "Public", mapPriv: "Private", mapHosp: "🏥 Hospitals", mapCentre: "🩺 Health centres", mapUrg: "🚑 Emergency",
+    mapHospOne: "Hospital (large dot)", mapLocate: "📍 Near me", mapLoading: "Loading map …", mapErr: "Could not load the map. Check your connection.",
+    mapNoLoc: "Could not find your location. Allow location in your settings.", mapNearTitle: "Closest to you", mapPlaces: "places", mapRoute: "🧭 Directions", mapCall: "📞 Call", mapWeb: "🌐 Website",
+    mapKindH: "Hospital", mapKindC: "Health centre / clinic", mapUrgTag: "Emergency", mapPrivInfo: "Private: requires insurance or payment.", mapPubInfo: "Public: bring your health card (SIP/EHIC).",
+    mapNote: "Source: OpenStreetMap. The list may be incomplete – consider calling before you go. In an emergency: call 112.",
+    mapAreas: [["torrevieja","Torrevieja / Orihuela Costa"],["albir","Albir / Altea / Benidorm"],["alicante","Alicante / Elche"],["murcia","Murcia / Mar Menor"],["valencia","Valencia"],["almeria","Almería"],["costadelsol","Costa del Sol"],["granada","Granada / Costa Tropical"],["grancanaria","Gran Canaria"],["tenerife","Tenerife"],["lanzarote","Lanzarote / Fuerteventura"],["mallorca","Mallorca / Baleares"]],
     heroTitle: "Hi! I'm <em>Elena</em> 👋",
     heroText: "A nurse in Spain. I help you understand the Spanish health system – whether you're on holiday or living here.",
     heroBtn: "Book an appointment with me", firstFreeShort: "🎁 Your first session is free",
@@ -476,7 +524,7 @@ const T = {
     days: ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],
     daysLong: ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
     months: ["January","February","March","April","May","June","July","August","September","October","November","December"],
-    nav: { hjem:"Home", innlegg:"Posts", rad:"Guides", sporsmal:"Ask", bestill:"Book", konto:"My page" },
+    nav: { hjem:"Home", innlegg:"Posts", rad:"Guides", kart:"Map", sporsmal:"Ask", bestill:"Book", konto:"My page" },
     cats: { Trening:"Exercise", Reise:"Travel", Vaksine:"Vaccines", Helsesenter:"Health centre", Sykehus:"Hospital",
             Akutt:"Emergency", Symptomer:"Symptoms", "Hos legen":"At the doctor's", Apotek:"Pharmacy", Papirer:"Paperwork",
             Kroppen:"Body", Sykdommer:"Conditions", "Undersøkelser":"Tests", Tannlege:"Dentist", "Gravid og barn":"Pregnancy & children", "Nyttige fraser":"Useful phrases" }
@@ -989,6 +1037,7 @@ const NAV = [
   {id:"hjem", svg:'<path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z"/>'},
   {id:"innlegg", svg:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/>'},
   {id:"rad", svg:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>'},
+  {id:"kart", svg:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0119 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>'},
   {id:"sporsmal", svg:'<path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/>'},
   {id:"bestill", svg:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>'},
   {id:"konto", svg:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'}
@@ -1050,7 +1099,7 @@ function setCur(c){
 document.querySelectorAll("[data-cur]").forEach(b => b.onclick = () => setCur(b.dataset.cur));
 
 /* ---------- Navigasjon ---------- */
-const VIEWS = ["hjem","innlegg","rad","ordliste","sporsmal","bestill","konto"];
+const VIEWS = ["hjem","innlegg","rad","ordliste","kart","sporsmal","bestill","konto"];
 function route(scroll = true){
   let v = location.hash.replace("#","");
   if(!VIEWS.includes(v)) v = "hjem";
@@ -1058,9 +1107,93 @@ function route(scroll = true){
   const navId = v==="ordliste" ? "rad" : v;
   document.querySelectorAll("[data-nav]").forEach(a=>a.classList.toggle("on", a.dataset.nav===navId));
   if (scroll) window.scrollTo(0,0);
+  if (v === "kart") initMap();
 }
 window.addEventListener("hashchange", () => route());
 document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>location.hash=b.dataset.go);
+
+
+/* ---------- Kart (Leaflet + OpenStreetMap) ---------- */
+const AREAS = { torrevieja:[37.97,-0.70,12], albir:[38.56,-0.08,12], alicante:[38.31,-0.58,11], murcia:[37.85,-1.05,10],
+  valencia:[39.46,-0.38,12], almeria:[36.84,-2.46,11], costadelsol:[36.58,-4.68,10], granada:[37.0,-3.6,10],
+  grancanaria:[27.93,-15.55,10], tenerife:[28.28,-16.55,10], lanzarote:[28.75,-13.85,9], mallorca:[39.6,2.95,9] };
+let LF = null; // Leaflet (L brukes allerede til språk)
+const map = { sector:"alle", kind:"alle", area:"torrevieja", data:null, m:null, layer:null, me:null, loading:false };
+try { const a = localStorage.getItem("eh-area"); if (AREAS[a]) map.area = a; } catch(e) {}
+function loadAsset(tag, attrs){ return new Promise((ok, bad) => { const el = document.createElement(tag); Object.assign(el, attrs); el.onload = ok; el.onerror = bad; document.head.appendChild(el); }); }
+function renderMapChips(){
+  const mk = (id, cur, opts, set) => { $(id).innerHTML = opts.map(([k,l])=>`<button class="chip ${cur===k?"on":""}" data-k="${k}">${esc(l)}</button>`).join("");
+    $(id).querySelectorAll("button").forEach(b=>b.onclick=()=>{ set(b.dataset.k); renderMapChips(); drawMap(); }); };
+  mk("#mapSector", map.sector, [["alle",t("mapAll")],["pub",t("mapPub")],["priv",t("mapPriv")]], v=>map.sector=v);
+  mk("#mapKind", map.kind, [["alle",t("mapAll")],["h",t("mapHosp")],["c",t("mapCentre")],["u",t("mapUrg")]], v=>map.kind=v);
+  $("#mapArea").innerHTML = t("mapAreas").map(([k,l])=>`<option value="${k}" ${k===map.area?"selected":""}>${esc(l)}</option>`).join("");
+}
+$("#mapArea").onchange = e => { map.area = e.target.value; try{localStorage.setItem("eh-area", map.area);}catch(_){}
+  const a = AREAS[map.area]; if (map.m) map.m.setView([a[0],a[1]], a[2]); };
+const mapFilter = r => (map.sector==="alle" || r[4]===map.sector) && (map.kind==="alle" || (map.kind==="u" ? r[5]===1 : r[3]===map.kind));
+function popupHtml(r){
+  const [name, lat, lon, kind, sec, urg, adr, tel, web] = r;
+  const link = web && /^https?:\/\//.test(web) ? web : (web ? "https://" + web : "");
+  return `<div class="mpop"><b>${esc(name)}</b><br>
+    <span class="tag ${sec}">${t(sec==="pub"?"mapPub":"mapPriv")} · ${sec==="pub"?"Público":"Privado"}</span>${urg?`<span class="tag urg">${t("mapUrgTag")}</span>`:""}
+    <div>${t(kind==="h"?"mapKindH":"mapKindC")}</div>${adr?`<div>${esc(adr)}</div>`:""}
+    <div style="margin:4px 0;color:#5E6B7A;font-size:.85em">${t(sec==="pub"?"mapPubInfo":"mapPrivInfo")}</div>
+    <div style="margin-top:6px"><a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" rel="noopener">${t("mapRoute")}</a>
+    ${tel?`<a href="tel:${esc(tel.replace(/[^+\d]/g,""))}">${t("mapCall")}</a>`:""}${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${t("mapWeb")}</a>`:""}</div></div>`;
+}
+function drawMap(){
+  if (!map.m || !map.data) return;
+  if (map.layer) map.layer.remove();
+  const rend = LF.canvas({padding:.5});
+  const list = map.data.filter(mapFilter);
+  // sykehus tegnes sist, så de ligger øverst
+  list.sort((a,b)=> (a[3]==="h") - (b[3]==="h"));
+  map.layer = LF.layerGroup(list.map(r => LF.circleMarker([r[1], r[2]], {
+      renderer: rend, radius: r[3]==="h" ? 9 : 6, weight: r[3]==="h" ? 3 : 1.5,
+      color: r[3]==="h" ? "#1F2A37" : "#fff", fillColor: r[4]==="pub" ? "#2563A8" : "#E08A1E", fillOpacity: .95
+    }).bindPopup(()=>popupHtml(r), {maxWidth: 260}))).addTo(map.m);
+  $("#mapCount").textContent = list.length + " " + t("mapPlaces");
+  renderNear();
+}
+function km(a, b, c, d){ const R=6371, x=(c-a)*Math.PI/180, y=(d-b)*Math.PI/180;
+  const h=Math.sin(x/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(y/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+function renderNear(){
+  if (!map.me || !map.data) { $("#mapNear").innerHTML = ""; return; }
+  const [la, lo] = map.me;
+  const near = map.data.filter(mapFilter).map(r => [km(la, lo, r[1], r[2]), r]).sort((a,b)=>a[0]-b[0]).slice(0, 6);
+  $("#mapNear").innerHTML = `<div class="card" style="padding:6px 16px"><h3 style="margin:10px 0 4px">${t("mapNearTitle")}</h3>` +
+    near.map(([d, r], i) => `<div class="near" data-i="${i}"><div><b>${esc(r[0])}</b><br><small>${t(r[3]==="h"?"mapKindH":"mapKindC")} · ${t(r[4]==="pub"?"mapPub":"mapPriv")}${r[5]?" · "+t("mapUrgTag"):""}</small></div><div class="km">${d<10?d.toFixed(1):Math.round(d)} km</div></div>`).join("") + `</div>`;
+  $("#mapNear").querySelectorAll(".near").forEach(el => el.onclick = () => { const r = near[+el.dataset.i][1];
+    map.m.setView([r[1], r[2]], 15); LF.popup({maxWidth:260}).setLatLng([r[1], r[2]]).setContent(popupHtml(r)).openOn(map.m); $("#map").scrollIntoView({behavior:"smooth", block:"center"}); });
+}
+$("#mapLocate").onclick = () => {
+  if (!navigator.geolocation) return toast(t("mapNoLoc"));
+  navigator.geolocation.getCurrentPosition(p => {
+    map.me = [p.coords.latitude, p.coords.longitude];
+    if (map.m) { if (map.meMarker) map.meMarker.remove();
+      map.meMarker = LF.circleMarker(map.me, {radius: 8, color: "#fff", weight: 3, fillColor: "#C0392B", fillOpacity: 1}).addTo(map.m);
+      map.m.setView(map.me, 13); }
+    renderNear();
+  }, () => toast(t("mapNoLoc")), {enableHighAccuracy: true, timeout: 10000});
+};
+async function initMap(){
+  renderMapChips();
+  if (map.m) { setTimeout(()=>map.m.invalidateSize(), 50); return; }
+  if (map.loading) return; map.loading = true;
+  try {
+    if (!(window.L && window.L.map)) { await Promise.all([loadAsset("link", {rel:"stylesheet", href:"vendor/leaflet/leaflet.css"}), loadAsset("script", {src:"vendor/leaflet/leaflet.js"})]); }
+    LF = window.L;
+    const [res] = await Promise.all([fetch("data/helse.json")]);
+    map.data = await res.json();
+    $("#map").innerHTML = "";
+    const a = AREAS[map.area];
+    map.m = LF.map("map", {zoomControl: true}).setView([a[0], a[1]], a[2]);
+    LF.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map.m);
+    drawMap();
+  } catch(e) { console.error(e); $("#map").innerHTML = `<p style="padding:20px">${t("mapErr")}</p>`; }
+  map.loading = false;
+}
 
 /* ---------- Hjem: tips ---------- */
 let tipI = new Date().getDate() % TIPS.length;
@@ -1437,7 +1570,7 @@ if(sbc){
 }
 if(hashErr){ acct.msg = t("aLinkExpired"); location.hash = "konto"; }
 
-function renderAll(){ applyStatic(); showTip(); renderPosts(); renderGuides(); renderWords(); renderFaq(); renderBooking(); renderAccount(); }
+function renderAll(){ applyStatic(); showTip(); renderPosts(); renderGuides(); renderWords(); renderFaq(); renderBooking(); renderAccount(); if (map.m) { renderMapChips(); drawMap(); } }
 renderAll();
 route();
 
