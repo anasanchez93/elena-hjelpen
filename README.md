@@ -21,5 +21,6 @@ App (PWA) for nordmenn i Spania: innlegg fra Instagram, råd, spansk ordliste, s
 
 ## Kart over helsetilbud
 - Fanen «Kart» viser sykehus og helsesentre i hele Spania (offentlige og private) med Leaflet (`vendor/leaflet/`) og kartfliser fra OpenStreetMap.
+- Offentlige helsesentre, legevakter og sykehus (med offentlig/privat) kommer fra Ministerio de Sanidad sine offisielle kataloger (`data/offisiell/`), geokodet med CartoCiudad (`tools/official.py`, cache i `data/geocache.json`). Private klinikker og tannleger kommer fra OpenStreetMap.
 - Dataene ligger i `data/helse.json`. GitHub Action `osm.yml` henter dem fra OpenStreetMap (Geofabrik) den 1. i hver måned og kjører `tools/build_helse.py`, som sorterer i offentlig/privat.
 - Adressesøket bruker Nominatim (OpenStreetMap), maks ett søk per sekund, kun ved trykk på «Søk».

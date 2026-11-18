@@ -1211,7 +1211,8 @@ $("#mapSearch").addEventListener("submit", async e => {
   const box = $("#mapResults");
   box.innerHTML = `<p class="es" style="margin:0 2px 10px">${t("mapSearching")}</p>`;
   const nq = norm(q);
-  const own = map.data.filter(r => norm(r[0]).includes(nq)).slice(0, 4).map(r => ({lat:r[1], lon:r[2], name:r[0], sub:t(r[3]==="h"?"mapKindH":r[3]==="d"?"mapKindD":"mapKindC") + " · " + t(r[4]==="pub"?"mapPub":"mapPriv"), row:r}));
+  const qw = nq.split(/\s+/).filter(Boolean);
+  const own = map.data.filter(r => { const n = norm(r[0] + " " + (r[6]||"")); return qw.every(w => n.includes(w)); }).slice(0, 5).map(r => ({lat:r[1], lon:r[2], name:r[0], sub:t(r[3]==="h"?"mapKindH":r[3]==="d"?"mapKindD":"mapKindC") + " · " + t(r[4]==="pub"?"mapPub":"mapPriv"), row:r}));
   let addr = [];
   try {
     const u = "https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=es&limit=5&accept-language=es&q=" + encodeURIComponent(q);
