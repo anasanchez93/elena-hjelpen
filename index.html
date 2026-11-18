@@ -136,7 +136,10 @@ label{font-weight:800;font-size:.92rem;display:block;margin:12px 0 6px}
 #map{height:58vh;min-height:320px;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#e8eef0;z-index:1}
 .maptools{display:flex;gap:8px;margin-bottom:10px}
 .maptools select{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:9px 10px;font:inherit;font-weight:700;background:#fff;color:var(--ink)}
-.maptools input{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:9px 12px;font:inherit;background:#fff;color:var(--ink)}
+.qwrap{position:relative;flex:1;min-width:0;display:flex}
+.qwrap input::-webkit-search-cancel-button{display:none}
+.qx{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:0;border-radius:50%;background:#E7ECEF;color:var(--ink);font-size:.9rem;font-weight:800;cursor:pointer;line-height:30px;padding:0}
+.maptools input{padding-right:40px!important;flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:9px 12px;font:inherit;background:#fff;color:var(--ink)}
 #mapResults .card{padding:4px 14px;margin-bottom:10px}#mapResults button{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 0;font:inherit;color:var(--ink);cursor:pointer}
 #mapResults button:last-child{border-bottom:0}#mapResults small{color:var(--muted)}
 .maptools .btn{margin:0;white-space:nowrap;padding:9px 12px}
@@ -265,7 +268,8 @@ nav.bottom svg{width:24px;height:24px}
     <div class="chips" id="mapSector"></div>
     <div class="chips" id="mapKind"></div>
     <form class="maptools" id="mapSearch">
-      <input id="mapQ" type="search" autocomplete="street-address" data-i18n-ph="mapSearchPh" data-i18n-aria="mapSearchPh">
+      <div class="qwrap"><input id="mapQ" type="search" autocomplete="street-address" data-i18n-ph="mapSearchPh" data-i18n-aria="mapSearchPh">
+        <button type="button" id="mapQx" class="qx" aria-label="Tøm" hidden>✕</button></div>
       <button class="btn primary" type="submit" data-i18n="mapSearchBtn"></button>
     </form>
     <div id="mapResults"></div>
@@ -1195,6 +1199,9 @@ $("#mapLocate").onclick = () => {
 };
 
 /* Søk på adresse (Nominatim/OpenStreetMap) og på navn i egne data */
+const syncQx = () => { $("#mapQx").hidden = !$("#mapQ").value; };
+$("#mapQ").addEventListener("input", syncQx);
+$("#mapQx").onclick = () => { $("#mapQ").value = ""; $("#mapResults").innerHTML = ""; syncQx(); $("#mapQ").focus(); };
 function setPoint(lat, lon, label){
   map.me = [lat, lon]; map.meAddr = true;
   if (map.meMarker) map.meMarker.remove();
